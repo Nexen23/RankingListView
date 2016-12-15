@@ -1,4 +1,4 @@
-package alex.scorelist.widget;
+package alex.rankinglist.widget;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
