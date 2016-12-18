@@ -2,13 +2,14 @@ package alex.rankinglist.widget;
 
 import android.content.Context;
 import android.support.annotation.ColorInt;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RatingBar;
 import android.widget.TextView;
 
 import alex.rankinglist.R;
@@ -25,7 +26,7 @@ public class RankingView extends LinearLayout {
 	@BindView(R.id.l_users) FrameLayout usersLayout;
 	@BindView(R.id.tv_score) TextView scoreLabel;
 	@BindView(R.id.tv_title) TextView titleLabel;
-	@BindView(R.id.rb_score) RatingBar scoreBar;
+	@BindView(R.id.iv_rank) ImageView rankImage;
 	@BindView(R.id.l_scores_ruler) ViewGroup scoresRulerLayout;
 
 	Integer baseHeight;
@@ -58,10 +59,10 @@ public class RankingView extends LinearLayout {
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
 
-	public void setData(String title, int level, int scoreMax, @ColorInt int color) {
+	public void setData(String title, int scoreMax, @ColorInt int color, @DrawableRes int rankImageId) {
 		scoreLabel.setText(String.format("%s%%", String.valueOf(scoreMax)));
 		titleLabel.setText(title);
-		scoreBar.setNumStars(level);
+		rankImage.setImageResource(rankImageId);
 		scoresRulerLayout.setBackgroundColor(color);
 	}
 
