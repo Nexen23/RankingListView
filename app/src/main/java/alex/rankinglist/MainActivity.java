@@ -5,7 +5,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
-import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.RankingView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 	class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			scaleFactor = MathUtil.InRange(scaleFactor * detector.getScaleFactor(), 0.1f, 5.0f);
+			scaleFactor *= detector.getScaleFactor();
 			rankingView.scale(scaleFactor);
 			return true;
 		}
