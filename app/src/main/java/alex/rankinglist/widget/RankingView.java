@@ -43,7 +43,7 @@ public class RankingView extends LinearLayout {
 
 	void init() {
 		LayoutInflater.from(getContext()).inflate(R.layout.widget_ranking_view, this, true);
-		setOrientation(VERTICAL);
+		setOrientation(HORIZONTAL);
 
 		ButterKnife.bind(this);
 	}
