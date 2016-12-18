@@ -6,4 +6,4 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:id="@+id/list_scores"
-	tools:listitem="@layout/widget_users_scores"/>
+	tools:listitem="@layout/widget_ranking_view"/>

@@ -8,17 +8,17 @@
 	tools:background="@android:color/holo_red_dark">
 
 	<TextView
-		android:text="15%"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:id="@+id/tv_score"
 		android:gravity="right"
 		android:textSize="18sp"
-		android:textColor="?android:attr/textColorPrimaryInverse"/>
+		android:textColor="?android:attr/textColorPrimaryInverse"
+		tools:text="15%"/>
 
 	<RatingBar
 		android:layout_width="match_parent"
-		android:id="@+id/ratingBar"
+		android:id="@+id/rb_score"
 		android:layout_height="0dp"
 		android:layout_gravity="center_horizontal"
 		style="@style/Base.Widget.AppCompat.RatingBar"
@@ -27,11 +27,11 @@
 		android:layout_weight="1"/>
 
 	<TextView
-		android:text="Newbie"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:id="@+id/tv_title"
 		android:gravity="right"
 		android:textSize="18sp"
-		android:textColor="?android:attr/textColorPrimaryInverse"/>
+		android:textColor="?android:attr/textColorPrimaryInverse"
+		tools:text="Newbie"/>
 </LinearLayout>
