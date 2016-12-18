@@ -1,6 +1,7 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
+import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -25,6 +26,7 @@ public class RankingView extends LinearLayout {
 	@BindView(R.id.tv_score) TextView scoreLabel;
 	@BindView(R.id.tv_title) TextView titleLabel;
 	@BindView(R.id.rb_score) RatingBar scoreBar;
+	@BindView(R.id.l_scores_ruler) ViewGroup scoresRulerLayout;
 
 	Integer baseHeight;
 
@@ -56,7 +58,12 @@ public class RankingView extends LinearLayout {
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
 
-
+	public void setData(String title, int level, int scoreMax, @ColorInt int color) {
+		scoreLabel.setText(String.format("%s%%", String.valueOf(scoreMax)));
+		titleLabel.setText(title);
+		scoreBar.setNumStars(level);
+		scoresRulerLayout.setBackgroundColor(color);
+	}
 
 	public void scale(float scaleFactor) {
 		scaleFactor = MathUtil.InRange(scaleFactor, SCALE_FACTOR_MIN, SCALE_FACTOR_MAX);

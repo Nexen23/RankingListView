@@ -1,5 +1,6 @@
 package alex.rankinglist;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 		ButterKnife.bind(this);
 
 		scaleDetector = new ScaleGestureDetector(this, new ScaleListener());
+		rankingView.setData("Newbie", 15, 1, Color.DKGRAY);
 	}
 
 	@Override

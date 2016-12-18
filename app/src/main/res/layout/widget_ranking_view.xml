@@ -6,6 +6,7 @@
 	android:layout_height="wrap_content">
 
 	<include layout="@layout/widget_scores_ruler"
+		android:id="@+id/l_scores_ruler"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_weight="1"

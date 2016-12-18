@@ -24,7 +24,8 @@
 		style="@style/Base.Widget.AppCompat.RatingBar"
 		android:layout_marginBottom="@dimen/space_normal"
 		android:layout_marginTop="@dimen/space_normal"
-		android:layout_weight="1"/>
+		android:layout_weight="1"
+		android:clickable="false"/>
 
 	<TextView
 		android:layout_width="match_parent"
