@@ -13,7 +13,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import alex.rankinglist.R;
-import alex.rankinglist.util.MathUtil;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -67,7 +66,7 @@ public class RankingView extends LinearLayout {
 	}
 
 	public void scale(float scaleFactor) {
-		scaleFactor = MathUtil.InRange(scaleFactor, SCALE_FACTOR_MIN, SCALE_FACTOR_MAX);
+		//scaleFactor = MathUtil.InRange(scaleFactor, SCALE_FACTOR_MIN, SCALE_FACTOR_MAX); // TODO: 25.01.2017 remove
 		ViewGroup.LayoutParams params = getLayoutParams();
 		params.height = (int) (baseHeight * scaleFactor);
 		setLayoutParams(params);
