@@ -8,6 +8,8 @@
 		android:right="@dimen/border_size"
 		android:top="@dimen/border_size"/>
 
+	<solid android:color="@android:color/white" />
+
 	<stroke
 		android:color="@color/border"
 		android:width="@dimen/border_size"/>

@@ -5,14 +5,15 @@ import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
-import alex.rankinglist.R;
+import java.util.Random;
 
 
 public class UsersView extends FrameLayout {
 	private LayoutInflater layoutInflater;
+	private Random random = new Random();
 
 	public UsersView(Context context) {
 		super(context);
@@ -31,7 +32,13 @@ public class UsersView extends FrameLayout {
 
 	void init() {
 		layoutInflater = LayoutInflater.from(getContext());
-		generateUsers(4);
+		getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				getViewTreeObserver().removeOnGlobalLayoutListener(this);
+				generateUsers(4);
+			}
+		});
 	}
 
 	void generateUsers(@IntRange(from=0) int count) {
@@ -41,6 +48,19 @@ public class UsersView extends FrameLayout {
 	}
 
 	void generateUser() {
-		View userView = layoutInflater.inflate(R.layout.widget_user_view, this, true);
+		UserView userView = new UserView(getContext());
+
+		String name = Integer.toHexString(random.nextInt(0xFFFFFF));
+		userView.setData(name, random.nextInt(200));
+
+		addView(userView);
+
+		FrameLayout.LayoutParams params = (LayoutParams) userView.getLayoutParams();
+
+
+		int userViewHeight = userView.getHeight();
+		int height = getHeight();
+		params.topMargin = random.nextInt(height - userViewHeight);
+		userView.setLayoutParams(params);
 	}
 }
