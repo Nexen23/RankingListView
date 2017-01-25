@@ -31,11 +31,13 @@ public class RankingView extends LinearLayout {
 	Integer baseHeight;
 
 	public RankingView(Context context) {
-		this(context, null);
+		super(context);
+		init();
 	}
 
 	public RankingView(Context context, @Nullable AttributeSet attrs) {
-		this(context, attrs, 0);
+		super(context, attrs);
+		init();
 	}
 
 	public RankingView(Context context, @Nullable AttributeSet attrs, int defStyle) {

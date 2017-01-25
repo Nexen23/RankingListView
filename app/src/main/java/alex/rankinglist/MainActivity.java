@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
 		ButterKnife.bind(this);
 
 		scaleDetector = new ScaleGestureDetector(this, new ScaleListener());
-		rankingView.setData("Newbie", 15, Color.DKGRAY, R.mipmap.ic_launcher);
+		rankingView.setData("Newbie", 15, Color.DKGRAY, R.drawable.icon_smile_3);
 	}
 
 	@Override
