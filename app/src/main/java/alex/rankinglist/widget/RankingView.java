@@ -73,6 +73,8 @@ public class RankingView extends LinearLayout {
 	}
 
 	public void scale(float scaleFactor) {
+		scaleFactor = 1 + (scaleFactor - 1) * 3;
+
 		ViewGroup.LayoutParams params = getLayoutParams();
 		int prevHeight = getHeight();
 		params.height = Math.max(minHeight, (int) (prevHeight * scaleFactor));
