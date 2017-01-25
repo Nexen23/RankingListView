@@ -5,6 +5,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -18,9 +19,7 @@ import butterknife.ButterKnife;
 
 
 public class RankingView extends LinearLayout {
-	private static final float
-			SCALE_FACTOR_MIN = 0.1f,
-			SCALE_FACTOR_MAX = 5.f;
+	public static final String TAG = RankingView.class.getName();
 
 	@BindView(R.id.l_users) FrameLayout usersLayout;
 	@BindView(R.id.tv_score) TextView scoreLabel;
@@ -28,7 +27,7 @@ public class RankingView extends LinearLayout {
 	@BindView(R.id.iv_rank) ImageView rankImage;
 	@BindView(R.id.l_scores_ruler) ViewGroup scoresRulerLayout;
 
-	Integer baseHeight;
+	Integer minHeight;
 
 	public RankingView(Context context) {
 		super(context);
@@ -54,10 +53,16 @@ public class RankingView extends LinearLayout {
 
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		if (baseHeight == null) {
-			baseHeight = h;
-		}
 		super.onSizeChanged(w, h, oldw, oldh);
+	}
+
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		super.onLayout(changed, l, t, r, b);
+		if (minHeight == null) {
+			minHeight = scoreLabel.getHeight() + titleLabel.getHeight();
+			Log.i(TAG, String.format("onSizeChanged: minHeight = %d", minHeight));
+		}
 	}
 
 	public void setData(String title, int scoreMax, @ColorInt int color, @DrawableRes int rankImageId) {
@@ -68,9 +73,15 @@ public class RankingView extends LinearLayout {
 	}
 
 	public void scale(float scaleFactor) {
-		//scaleFactor = MathUtil.InRange(scaleFactor, SCALE_FACTOR_MIN, SCALE_FACTOR_MAX); // TODO: 25.01.2017 remove
 		ViewGroup.LayoutParams params = getLayoutParams();
-		params.height = (int) (baseHeight * scaleFactor);
+		int prevHeight = getHeight();
+		params.height = Math.max(minHeight, (int) (prevHeight * scaleFactor));
+		if ((minHeight + rankImage.getHeight()) < getHeight()) {
+			rankImage.setVisibility(VISIBLE);
+		} else {
+			rankImage.setVisibility(GONE);
+		}
+		Log.d(TAG, String.format("scaleFactor = %f, prevHeight = %d, newHeight = %d", scaleFactor, prevHeight, params.height));
 		setLayoutParams(params);
 	}
 }

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
-	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:padding="@dimen/space_small"
-	tools:background="@android:color/darker_gray">
+	android:background="@color/ruler_color_default">
 
 	<TextView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		android:layout_gravity="top"
 		android:id="@+id/tv_score"
-		android:gravity="right"
+		android:gravity="end"
 		android:textSize="18sp"
 		android:textColor="?android:attr/textColorPrimaryInverse"
 		tools:text="15%"/>
@@ -24,7 +24,6 @@
 		android:layout_gravity="center"
 		android:layout_marginBottom="@dimen/space_normal"
 		android:layout_marginTop="@dimen/space_normal"
-		android:layout_weight="1"
 		tools:src="@drawable/icon_smile_5"
 		android:scaleType="centerInside"
 		/>
@@ -32,10 +31,11 @@
 	<TextView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		android:layout_gravity="bottom"
 		android:id="@+id/tv_title"
-		android:gravity="right"
+		android:gravity="end"
 		android:textSize="18sp"
 		android:textColor="?android:attr/textColorPrimaryInverse"
 		tools:text="Newbie"/>
 
-</LinearLayout>
+</FrameLayout>
