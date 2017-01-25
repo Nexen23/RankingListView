@@ -8,7 +8,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,7 +20,7 @@ import butterknife.ButterKnife;
 public class RankingView extends LinearLayout {
 	public static final String TAG = RankingView.class.getName();
 
-	@BindView(R.id.l_users) FrameLayout usersLayout;
+	@BindView(R.id.l_users) UsersView usersView;
 	@BindView(R.id.tv_score) TextView scoreLabel;
 	@BindView(R.id.tv_title) TextView titleLabel;
 	@BindView(R.id.iv_rank) ImageView rankImage;

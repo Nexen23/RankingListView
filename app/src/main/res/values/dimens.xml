@@ -7,4 +7,7 @@
 	<dimen name="space_normal">8dp</dimen>
 
 	<dimen name="rank_icon_size">64dp</dimen>
+	<dimen name="user_avatar_size">32dp</dimen>
+	<dimen name="border_size">2dp</dimen>
+	<dimen name="border_corner">5dp</dimen>
 </resources>
