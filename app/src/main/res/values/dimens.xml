@@ -5,4 +5,6 @@
 
 	<dimen name="space_small">4dp</dimen>
 	<dimen name="space_normal">8dp</dimen>
+
+	<dimen name="rank_icon_size">64dp</dimen>
 </resources>

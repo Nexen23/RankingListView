@@ -18,15 +18,16 @@
 		tools:text="15%"/>
 
 	<ImageView
-		android:layout_width="wrap_content"
+		android:layout_width="@dimen/rank_icon_size"
 		android:id="@+id/iv_rank"
-		android:layout_height="wrap_content"
+		android:layout_height="@dimen/rank_icon_size"
 		android:layout_gravity="center"
 		android:layout_marginBottom="@dimen/space_normal"
 		android:layout_marginTop="@dimen/space_normal"
 		android:layout_weight="1"
-		tools:src="@mipmap/ic_launcher"
-		android:scaleType="center"/>
+		tools:src="@drawable/icon_smile_5"
+		android:scaleType="centerInside"
+		/>
 
 	<TextView
 		android:layout_width="match_parent"
