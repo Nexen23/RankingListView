@@ -13,12 +13,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import alex.rankinglist.R;
+import alex.rankinglist.widget.model.RankedUsers;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
-public class RankingView extends LinearLayout {
-	public static final String TAG = RankingView.class.getName();
+public class RankedUsersView extends LinearLayout {
+	public static final String TAG = RankedUsersView.class.getName();
 
 	@BindView(R.id.l_users) UsersView usersView;
 	@BindView(R.id.tv_score) TextView scoreLabel;
@@ -28,23 +29,23 @@ public class RankingView extends LinearLayout {
 
 	Integer minHeight;
 
-	public RankingView(Context context) {
+	public RankedUsersView(Context context) {
 		super(context);
 		init();
 	}
 
-	public RankingView(Context context, @Nullable AttributeSet attrs) {
+	public RankedUsersView(Context context, @Nullable AttributeSet attrs) {
 		super(context, attrs);
 		init();
 	}
 
-	public RankingView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+	public RankedUsersView(Context context, @Nullable AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init();
 	}
 
 	void init() {
-		LayoutInflater.from(getContext()).inflate(R.layout.widget_ranking_view, this, true);
+		LayoutInflater.from(getContext()).inflate(R.layout.widget_ranked_users, this, true);
 		setOrientation(HORIZONTAL);
 
 		ButterKnife.bind(this);
@@ -84,5 +85,9 @@ public class RankingView extends LinearLayout {
 		}
 		Log.d(TAG, String.format("scaleFactor = %f, prevHeight = %d, newHeight = %d", scaleFactor, prevHeight, params.height));
 		setLayoutParams(params);
+	}
+
+	public void setModel(RankedUsers rankedUsers) {
+
 	}
 }

@@ -15,7 +15,7 @@ import java.util.List;
 
 import alex.rankinglist.databinding.WidgetRankingListBinding;
 import alex.rankinglist.widget.model.Rank;
-import alex.rankinglist.widget.model.RankGroup;
+import alex.rankinglist.widget.model.RankedUsers;
 import alex.rankinglist.widget.model.User;
 
 
@@ -43,11 +43,11 @@ public class RankingListView extends ScrollView {
 		scaleDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
 	}
 
-	private void fillRankingList(List<RankGroup> rankGroups) {
-		for (RankGroup group : rankGroups) {
-			RankGroupView groupView = new RankGroupView(getContext());
-			groupView.setModel(group);
-			binding.listRankingViews.addView(groupView);
+	private void fillRankingList(List<RankedUsers> rankedUsersList) {
+		for (RankedUsers rankedUsers : rankedUsersList) {
+			RankedUsersView rankedUsersView = new RankedUsersView(getContext());
+			rankedUsersView.setModel(rankedUsers);
+			binding.listRankingViews.addView(rankedUsersView);
 		}
 	}
 
@@ -58,21 +58,22 @@ public class RankingListView extends ScrollView {
 	}
 
 	public void setModel(List<Rank> ranks, List<User> users) {
-		List<RankGroup> rankGroups = new ArrayList<>();
+		List<RankedUsers> rankedUsersList = new ArrayList<>();
 		int prevRankScoreMax = -1; // to include users with score 0
+
 		for (Rank rank : ranks) {
-			List<User> rankedUsers = new ArrayList<>();
+			List<User> usersInRank = new ArrayList<>();
 			for (User user : users) {
 				if (user.score > prevRankScoreMax && user.score <= rank.scoreMax) {
-					rankedUsers.add(user);
+					usersInRank.add(user);
 				}
 			}
 
-			rankGroups.add(new RankGroup(rank, rankedUsers));
+			rankedUsersList.add(new RankedUsers(rank, usersInRank));
 			prevRankScoreMax = rank.scoreMax;
 		}
 
-		fillRankingList(rankGroups);
+		fillRankingList(rankedUsersList);
 	}
 
 	class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {

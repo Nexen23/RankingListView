@@ -45,7 +45,7 @@ public class UsersGroupView extends FrameLayout {
 
 	public void setModel(User user) {
 		nameLabel.setText(user.name);
-		rankLabel.setText(String.format("%d%%", user.rank));
+		rankLabel.setText(String.format("%d%%", user.score));
 	}
 
 	public void setModel(List<User> usersGroup) {
