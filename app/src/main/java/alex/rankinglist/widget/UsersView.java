@@ -35,7 +35,7 @@ public class UsersView extends FrameLayout {
 			@Override
 			public void onGlobalLayout() {
 				getViewTreeObserver().removeOnGlobalLayoutListener(this);
-				generateUsers(4);
+				generateUsers(0);
 			}
 		});
 	}
