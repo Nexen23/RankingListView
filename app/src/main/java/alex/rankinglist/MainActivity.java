@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-		binding.rankingListView.setModel(getRanks(), getUsers());
+		binding.rankingList.setModel(getRanks(), getUsers());
 	}
 
 	private List<Rank> getRanks() {
