@@ -1,15 +1,15 @@
 package alex.rankinglist.widget.model;
 
 
-import android.support.annotation.IntRange;
+import android.support.annotation.FloatRange;
 
 public class User {
 	final public String name;
-	@IntRange(from=0) public
-	final int rank;
+	@FloatRange(from=0, to=100) public
+	final float score;
 
-	public User(String name, int rank) {
+	public User(String name, float score) {
 		this.name = name;
-		this.rank = rank;
+		this.score = score;
 	}
 }
