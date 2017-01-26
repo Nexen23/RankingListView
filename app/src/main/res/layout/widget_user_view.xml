@@ -11,12 +11,13 @@
 	<ImageView
 		android:layout_width="@dimen/user_avatar_size"
 		android:layout_height="@dimen/user_avatar_size"
+		android:visibility="gone"
 		android:layout_gravity="center_vertical"
 		app:srcCompat="@mipmap/ic_launcher"
 		android:id="@+id/iv_avatar"/>
 
 	<LinearLayout
-		android:orientation="vertical"
+		android:orientation="horizontal"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">
 
