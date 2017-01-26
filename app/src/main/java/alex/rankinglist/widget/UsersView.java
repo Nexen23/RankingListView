@@ -11,11 +11,12 @@ import android.widget.FrameLayout;
 
 import java.util.Random;
 
+import alex.rankinglist.util.NameUtil;
 import alex.rankinglist.widget.model.User;
 
 
 public class UsersView extends FrameLayout {
-	private Random random = new Random();
+	static private Random random = new Random();
 
 	public UsersView(Context context) {
 		super(context);
@@ -63,11 +64,10 @@ public class UsersView extends FrameLayout {
 	void generateUser() {
 		UsersGroupView usersGroupView = new UsersGroupView(getContext());
 
-		String name = Integer.toHexString(random.nextInt(0xFFFFFF));
 		final int maxRank = 100;
 		int rank = random.nextInt(maxRank);
 		@FloatRange(from=0, to=1) float viewPos = (float) rank / maxRank;
-		usersGroupView.setModel(new User(name, rank));
+		usersGroupView.setModel(new User(NameUtil.GenerateName(), rank));
 		usersGroupView.setTag(viewPos);
 
 		addView(usersGroupView);
