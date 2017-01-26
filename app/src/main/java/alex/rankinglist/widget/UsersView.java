@@ -11,6 +11,8 @@ import android.widget.FrameLayout;
 
 import java.util.Random;
 
+import alex.rankinglist.widget.model.User;
+
 
 public class UsersView extends FrameLayout {
 	private Random random = new Random();
@@ -35,7 +37,7 @@ public class UsersView extends FrameLayout {
 			@Override
 			public void onGlobalLayout() {
 				getViewTreeObserver().removeOnGlobalLayoutListener(this);
-				generateUsers(0);
+				generateUsers(10);
 			}
 		});
 	}
@@ -59,23 +61,23 @@ public class UsersView extends FrameLayout {
 	}
 
 	void generateUser() {
-		UserView userView = new UserView(getContext());
+		UsersGroupView usersGroupView = new UsersGroupView(getContext());
 
 		String name = Integer.toHexString(random.nextInt(0xFFFFFF));
 		final int maxRank = 100;
 		int rank = random.nextInt(maxRank);
 		@FloatRange(from=0, to=1) float viewPos = (float) rank / maxRank;
-		userView.setData(name, rank);
-		userView.setTag(viewPos);
+		usersGroupView.setModel(new User(name, rank));
+		usersGroupView.setTag(viewPos);
 
-		addView(userView);
+		addView(usersGroupView);
 
-		FrameLayout.LayoutParams params = (LayoutParams) userView.getLayoutParams();
+		FrameLayout.LayoutParams params = (LayoutParams) usersGroupView.getLayoutParams();
 
 
-		int userViewHeight = userView.getHeight(); // FIXME: 25.01.2017 zero after creation
+		int userViewHeight = usersGroupView.getHeight(); // FIXME: 25.01.2017 zero after creation
 		int height = getHeight();
 		params.topMargin = (int) (viewPos * (height - userViewHeight));
-		userView.setLayoutParams(params);
+		usersGroupView.setLayoutParams(params);
 	}
 }
