@@ -2,20 +2,27 @@ package alex.rankinglist.util;
 
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 
 public class LogUtil {
 	private static final String TAG = LogUtil.class.getName();
 
+	private static String format(@Nullable Object sender, String message, Object... args) {
+		String messageWithSender = message;
+		if (sender != null) {
+			messageWithSender = String.format("[%x]{%s} %s", sender.hashCode(), sender.getClass().getSimpleName(), message);
+		}
+		return String.format(messageWithSender, args);
+	}
+
 	public static void log(@NonNull Object sender, String message, Object... args) {
-		String messageWithSender =
-				String.format("[%x]{%s} %s", sender.hashCode(), sender.getClass().getSimpleName(), message);
-		Log.d(TAG, String.format(messageWithSender, args));
+		Log.d(TAG, format(sender, message, args));
 	}
 
 	public static void log(String message, Object... args) {
-		Log.d(TAG, String.format(message, args));
+		Log.d(TAG, format(null, message, args));
 	}
 
 	public static String MeasureSpecToString(int measureSpec) {
@@ -31,5 +38,13 @@ public class LogUtil {
 		}
 
 		return String.format("(size=%d, mode=%s)", View.MeasureSpec.getSize(measureSpec), mode);
+	}
+
+	public static void err(@NonNull Object sender, String message, Object... args) {
+		Log.e(TAG, format(sender, message, args));
+	}
+
+	public static void i(@NonNull Object sender, String message, Object... args) {
+		Log.i(TAG, format(sender, message, args));
 	}
 }

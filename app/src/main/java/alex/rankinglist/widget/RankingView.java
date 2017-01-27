@@ -45,7 +45,7 @@ public class RankingView extends FrameLayout {
 		super.onSizeChanged(w, h, oldw, oldh);
 		int sum = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivRank.getHeight();
 		boolean b = sum > h;
-		LogUtil.log(this, "onSizeChanged: tvScore=%d, tvTitle=%d, ivRank=%d, sum=%d :: h=%d :: b=%s",
+		LogUtil.i(this, "onSizeChanged: tvScore=%d, tvTitle=%d, ivRank=%d, sum=%d :: h=%d :: b=%s",
 				binding.tvScore.getHeight(), binding.tvTitle.getHeight(), binding.ivRank.getHeight(), sum, h, b);
 		if (b) {
 			binding.ivRank.setVisibility(GONE);
