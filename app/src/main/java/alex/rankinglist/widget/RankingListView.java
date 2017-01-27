@@ -85,43 +85,74 @@ public class RankingListView extends ScrollView {
 		fillRankingList(rankings);
 	}
 
+	Float scrollNext;
+
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+	}
+
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		super.onLayout(changed, l, t, r, b);
+
+		if (scrollNext != null) {
+			setScrollY(scrollNext.intValue());
+			scrollNext = null;
+		}
+	}
+
+	private void scale(final float detectedScaleFactor, final float focusY) {
+		//for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
+		// FIXME: 26.01.2017 strange jump on (first?) zoom in
+
+		View root = binding.listRankingViews;
+		ViewGroup.LayoutParams params = root.getLayoutParams();
+		float rootHeight = params.height > 0 ? params.height : root.getHeight();
+
+		float scaleFactor = 1 + (detectedScaleFactor - 1) * 3;
+
+		float curScrollY = scrollNext == null ? getScrollY() : scrollNext;
+
+		float scrollY = curScrollY + focusY;
+		float coef = scrollY / rootHeight;
+
+		final float newHeight = rootHeight * scaleFactor,
+				newScrollY = newHeight * coef - focusY;//scrollY * scaleFactor;
+
+		//LogUtil.log("--------------------------------");
+
+		LogUtil.log("-------------------------------- [factor=%.3f] prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d (PARAMS:%d) ++ focusY=%.2f",
+				scaleFactor,
+				(int) scrollY, coef,
+				(int) (newScrollY + focusY), (newScrollY + focusY) / newHeight,
+				(int) rootHeight, (int) newHeight, params.height,
+				focusY);
+
+		//View rootViewGroup = binding.listRankingViews.getChildAt(i);
+		params.height = (int) newHeight;
+		root.setLayoutParams(params);
+
+			/*post(new Runnable() {
+				@Override
+				public void run() {
+					setScrollY((int) newScrollY);
+				}
+			});*/
+		scrollNext = newScrollY; // postpone because actual height will changed after onLayout, so may happen overscroll here
+		//setScrollY((int) newScrollY);//(newScrollY - detector.getFocusY()));
+		//}
+	}
+
 	class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
 		@Override
 		public boolean onScaleBegin(ScaleGestureDetector detector) {
 			return super.onScaleBegin(detector);
 		}
 
-
-
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			//for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
-				// FIXME: 26.01.2017 strange jump on (first?) zoom in
-
-			View rootViewGroup = binding.listRankingViews;
-
-			float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
-			ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
-
-			float scrollY = getScrollY() + detector.getFocusY();
-			float coef = scrollY / rootViewGroup.getHeight();
-
-			float newHeight = rootViewGroup.getHeight() * scaleFactor,
-					newScrollY = newHeight * coef - detector.getFocusY();//scrollY * scaleFactor;
-
-			LogUtil.log("--------------------------------");
-
-				/*LogUtil.log("-------------------------------- prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d",
-						(int) scrollY, (float) scrollY / rootViewGroup.getHeight(),
-						(int) newScrollY, newScrollY / newHeight,
-						rootViewGroup.getHeight(), (int) newHeight);*/
-
-				//View rootViewGroup = binding.listRankingViews.getChildAt(i);
-				params.height = (int) newHeight;
-				rootViewGroup.setLayoutParams(params);
-
-			setScrollY((int) newScrollY);//(newScrollY - detector.getFocusY()));
-			//}
+			scale(detector.getScaleFactor(), detector.getFocusY());
 			return true;
 		}
 	}
