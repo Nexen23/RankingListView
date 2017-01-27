@@ -54,6 +54,7 @@ public class RankingListView extends ScrollView {
 
 			LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) rankingView.getLayoutParams();
 			params.weight = 1;
+			params.height = 0;
 			rankingView.setLayoutParams(params);
 		}
 	}
@@ -94,15 +95,16 @@ public class RankingListView extends ScrollView {
 
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
+			//for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
 				// FIXME: 26.01.2017 strange jump on (first?) zoom in
 				LogUtil.log("--------------------------------");
-				View rootViewGroup = binding.listRankingViews.getChildAt(i);//binding.listRankingViews;
+				//View rootViewGroup = binding.listRankingViews.getChildAt(i);
+				View rootViewGroup = binding.listRankingViews;
 				ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
 				float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
 				params.height = (int) (rootViewGroup.getHeight() * scaleFactor);
 				rootViewGroup.setLayoutParams(params);
-			}
+			//}
 			return true;
 		}
 	}
