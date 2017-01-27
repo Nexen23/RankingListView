@@ -97,13 +97,26 @@ public class RankingListView extends ScrollView {
 		public boolean onScale(ScaleGestureDetector detector) {
 			//for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
 				// FIXME: 26.01.2017 strange jump on (first?) zoom in
-				LogUtil.log("--------------------------------");
+
+			View rootViewGroup = binding.listRankingViews;
+
+
+			float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
+			ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
+
+			float newHeight = rootViewGroup.getHeight() * scaleFactor,
+					newScrollY = getScrollY() * scaleFactor;
+
+				LogUtil.log("-------------------------------- prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d",
+						getScrollY(), (float) getScrollY() / rootViewGroup.getHeight(),
+						(int) newScrollY, newScrollY / newHeight,
+						rootViewGroup.getHeight(), (int) newHeight);
+
 				//View rootViewGroup = binding.listRankingViews.getChildAt(i);
-				View rootViewGroup = binding.listRankingViews;
-				ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
-				float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
-				params.height = (int) (rootViewGroup.getHeight() * scaleFactor);
+				params.height = (int) newHeight;
 				rootViewGroup.setLayoutParams(params);
+
+			setScrollY((int) newScrollY);
 			//}
 			return true;
 		}
