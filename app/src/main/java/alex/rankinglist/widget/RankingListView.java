@@ -60,10 +60,11 @@ public class RankingListView extends ScrollView {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
-		//LogUtil.log("pointers count=%d", ev.getPointerCount());
-		boolean isMultitouch = ev.getPointerCount() >= 2;
 		scaleDetector.onTouchEvent(ev);
-		return super.onTouchEvent(ev);
+		if (ev.getPointerCount() == 1) {
+			super.onTouchEvent(ev);
+		}
+		return true;
 	}
 
 	public void setModel(List<Rank> ranks, List<User> users) {
