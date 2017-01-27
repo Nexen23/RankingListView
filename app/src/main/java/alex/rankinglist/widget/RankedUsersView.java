@@ -1,33 +1,29 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import junit.framework.Assert;
+
+import java.util.List;
+
 import alex.rankinglist.R;
-import alex.rankinglist.widget.model.RankedUsers;
+import alex.rankinglist.util.LogUtil;
+import alex.rankinglist.widget.model.RankedUser;
+import alex.rankinglist.widget.model.User;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
-public class RankedUsersView extends LinearLayout {
-	public static final String TAG = RankedUsersView.class.getName();
-
-	@BindView(R.id.l_users) UsersView usersView;
-	@BindView(R.id.tv_score) TextView scoreLabel;
-	@BindView(R.id.tv_title) TextView titleLabel;
-	@BindView(R.id.iv_rank) ImageView rankImage;
-	@BindView(R.id.l_scores_ruler) ViewGroup scoresRulerLayout;
-
-	Integer minHeight;
+public class RankedUsersView extends FrameLayout {
+	@BindView(R.id.tv_name) TextView nameLabel;
+	@BindView(R.id.tv_rank) TextView rankLabel;
+	@BindView(R.id.iv_avatar) ImageView avatarImage;
 
 	public RankedUsersView(Context context) {
 		super(context);
@@ -45,49 +41,30 @@ public class RankedUsersView extends LinearLayout {
 	}
 
 	void init() {
-		LayoutInflater.from(getContext()).inflate(R.layout.widget_ranked_users, this, true);
-		setOrientation(HORIZONTAL);
-
+		LayoutInflater.from(getContext()).inflate(R.layout.widget_user_view, this, true);
 		ButterKnife.bind(this);
 	}
 
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		super.onSizeChanged(w, h, oldw, oldh);
+	public void setModel(User user) {
+		nameLabel.setText(user.name);
+		rankLabel.setText(String.format("%.1f%%", user.score));
+	}
+
+	public void setModel(List<User> usersGroup) {
+		Assert.assertTrue(usersGroup.size() >= 2);
+		setModel(usersGroup.get(0));
+		nameLabel.setText(String.format("%s (+%d)", nameLabel.getText(), usersGroup.size()));
+	}
+
+	public void setModel(RankedUser user) {
+		setModel(user.user);
 	}
 
 	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		super.onLayout(changed, l, t, r, b);
-		if (minHeight == null) {
-			minHeight = scoreLabel.getHeight() + titleLabel.getHeight();
-			Log.i(TAG, String.format("onSizeChanged: minHeight = %d", minHeight));
-		}
-	}
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-	public void setData(String title, int scoreMax, @ColorInt int color, @DrawableRes int rankImageId) {
-		scoreLabel.setText(String.format("%s%%", String.valueOf(scoreMax)));
-		titleLabel.setText(title);
-		rankImage.setImageResource(rankImageId);
-		scoresRulerLayout.setBackgroundColor(color);
-	}
-
-	public void scale(float scaleFactor) {
-		scaleFactor = 1 + (scaleFactor - 1) * 3;
-
-		ViewGroup.LayoutParams params = getLayoutParams();
-		int prevHeight = getHeight();
-		params.height = Math.max(minHeight, (int) (prevHeight * scaleFactor));
-		if ((minHeight + rankImage.getHeight()) < getHeight()) {
-			rankImage.setVisibility(VISIBLE);
-		} else {
-			rankImage.setVisibility(GONE);
-		}
-		Log.d(TAG, String.format("scaleFactor = %f, prevHeight = %d, newHeight = %d", scaleFactor, prevHeight, params.height));
-		setLayoutParams(params);
-	}
-
-	public void setModel(RankedUsers rankedUsers) {
-
+		LogUtil.log(this, "measured=%d, %s",
+				getMeasuredHeight(), LogUtil.MeasureSpecToString(heightMeasureSpec));
 	}
 }

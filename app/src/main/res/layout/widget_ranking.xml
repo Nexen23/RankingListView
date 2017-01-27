@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools">
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		tools:layout_height="match_parent">
+
+		<FrameLayout
+			android:id="@+id/l_scores_ruler"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:padding="@dimen/space_small"
+			android:background="@color/ruler_color_default"
+			android:layout_weight="2">
+
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_gravity="top"
+				android:id="@+id/tv_score"
+				android:gravity="end"
+				android:textSize="18sp"
+				android:textColor="?android:attr/textColorPrimaryInverse"
+				tools:text="15%"/>
+
+			<ImageView
+				android:layout_width="@dimen/rank_icon_size"
+				android:id="@+id/iv_rank"
+				android:layout_height="@dimen/rank_icon_size"
+				android:layout_gravity="center"
+				android:layout_marginBottom="@dimen/space_normal"
+				android:layout_marginTop="@dimen/space_normal"
+				tools:src="@drawable/icon_smile_5"
+				android:scaleType="centerInside"
+				/>
+
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_gravity="bottom"
+				android:id="@+id/tv_title"
+				android:gravity="end"
+				android:textSize="18sp"
+				android:textColor="?android:attr/textColorPrimaryInverse"
+				tools:text="Newbie"/>
+
+		</FrameLayout>
+
+		<alex.rankinglist.widget.UsersView
+			android:id="@+id/v_users"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_weight="1"
+			/>
+
+	</LinearLayout>
+
+</layout>

@@ -8,14 +8,16 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import alex.rankinglist.databinding.WidgetRankingListBinding;
+import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
-import alex.rankinglist.widget.model.RankedUsers;
+import alex.rankinglist.widget.model.Ranking;
 import alex.rankinglist.widget.model.User;
 
 
@@ -39,52 +41,67 @@ public class RankingListView extends ScrollView {
 	}
 
 	private void init() {
+		setFillViewport(true);
 		binding = WidgetRankingListBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		scaleDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
 	}
 
-	private void fillRankingList(List<RankedUsers> rankedUsersList) {
-		for (RankedUsers rankedUsers : rankedUsersList) {
-			RankedUsersView rankedUsersView = new RankedUsersView(getContext());
-			rankedUsersView.setModel(rankedUsers);
-			binding.listRankingViews.addView(rankedUsersView);
+	private void fillRankingList(List<Ranking> rankings) {
+		for (Ranking ranking : rankings) {
+			RankingView rankingView = new RankingView(getContext());
+			rankingView.setModel(ranking);
+			binding.listRankingViews.addView(rankingView, 0);
+
+			LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) rankingView.getLayoutParams();
+			params.weight = 1;
+			rankingView.setLayoutParams(params);
 		}
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
+		//LogUtil.log("pointers count=%d", ev.getPointerCount());
+		boolean isMultitouch = ev.getPointerCount() >= 2;
 		scaleDetector.onTouchEvent(ev);
 		return super.onTouchEvent(ev);
 	}
 
 	public void setModel(List<Rank> ranks, List<User> users) {
-		List<RankedUsers> rankedUsersList = new ArrayList<>();
-		int prevRankScoreMax = -1; // to include users with score 0
-
+		List<Ranking> rankings = new ArrayList<>();
 		for (Rank rank : ranks) {
 			List<User> usersInRank = new ArrayList<>();
 			for (User user : users) {
-				if (user.score > prevRankScoreMax && user.score <= rank.scoreMax) {
+				if ((user.score > rank.scoreMin && user.score <= rank.scoreMax)
+						|| rank.scoreMin == 0 && user.score == 0) {
 					usersInRank.add(user);
 				}
 			}
 
-			rankedUsersList.add(new RankedUsers(rank, usersInRank));
-			prevRankScoreMax = rank.scoreMax;
+			rankings.add(new Ranking(rank, usersInRank));
 		}
 
-		fillRankingList(rankedUsersList);
+		fillRankingList(rankings);
 	}
 
 	class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
 		@Override
+		public boolean onScaleBegin(ScaleGestureDetector detector) {
+			return super.onScaleBegin(detector);
+		}
+
+
+
+		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			// TODO: 26.01.2017 increase factor
-			View rootViewGroup = binding.listRankingViews;
-			ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
-			float scaleFactor = detector.getScaleFactor();
-			params.height = (int) (rootViewGroup.getHeight() * scaleFactor);
-			rootViewGroup.setLayoutParams(params);
+			for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
+				// FIXME: 26.01.2017 strange jump on (first?) zoom in
+				LogUtil.log("--------------------------------");
+				View rootViewGroup = binding.listRankingViews.getChildAt(i);//binding.listRankingViews;
+				ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
+				float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
+				params.height = (int) (rootViewGroup.getHeight() * scaleFactor);
+				rootViewGroup.setLayoutParams(params);
+			}
 			return true;
 		}
 	}

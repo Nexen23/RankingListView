@@ -25,11 +25,11 @@ public class MainActivity extends AppCompatActivity {
 
 	private List<Rank> getRanks() {
 		return Arrays.asList(
-				new Rank("Newbie", 15, R.drawable.icon_smile_3, Color.DKGRAY),
-				new Rank("Good", 45, R.drawable.icon_smile_5, Color.BLUE));
+				new Rank("Newbie", 0, 30, R.drawable.icon_smile_3, Color.DKGRAY),
+				new Rank("Good", 30, 100, R.drawable.icon_smile_5, Color.BLUE));
 	}
 
 	private List<User> getUsers() {
-		return RandomUtil.GenerateUsersList(15);
+		return RandomUtil.GenerateUsersList(20);
 	}
 }

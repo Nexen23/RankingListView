@@ -1,50 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:orientation="horizontal"
-	android:layout_width="match_parent"
-	android:layout_height="@dimen/user_view_height"
-	android:gravity="center_vertical"
-	android:background="@drawable/bg_border"
-	android:layout_marginLeft="@dimen/space_normal">
-
-	<ImageView
-		android:layout_width="@dimen/user_avatar_size"
-		android:layout_height="@dimen/user_avatar_size"
-		android:visibility="gone"
-		android:layout_gravity="center_vertical"
-		app:srcCompat="@mipmap/ic_launcher"
-		android:id="@+id/iv_avatar"/>
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<LinearLayout
 		android:orientation="horizontal"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content">
+		android:layout_height="@dimen/user_view_height"
+		android:gravity="center_vertical"
+		android:background="@drawable/bg_border"
+		android:layout_marginLeft="@dimen/space_normal">
 
-		<TextView
-			tools:text="Username"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:id="@+id/tv_name"
-			android:layout_weight="1"
-			android:textSize="17sp"
-			android:textColor="@color/colorPrimaryDark"
+		<ImageView
+			android:layout_width="@dimen/user_avatar_size"
+			android:layout_height="@dimen/user_avatar_size"
+			android:visibility="gone"
 			android:layout_gravity="center_vertical"
-			android:paddingLeft="@dimen/space_small"
-			android:paddingRight="@dimen/space_small"/>
+			app:srcCompat="@mipmap/ic_launcher"
+			android:id="@+id/iv_avatar"/>
 
-		<TextView
-			tools:text="14%"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:id="@+id/tv_rank"
-			android:layout_weight="1"
-			android:textSize="15sp"
-			android:layout_gravity="center_vertical"
-			android:gravity="right"
-			android:paddingLeft="@dimen/space_small"
-			android:paddingRight="@dimen/space_small"/>
+		<LinearLayout
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<TextView
+				tools:text="Username"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_name"
+				android:layout_weight="1"
+				android:textSize="17sp"
+				android:textColor="@color/colorPrimaryDark"
+				android:layout_gravity="center_vertical"
+				android:paddingLeft="@dimen/space_small"
+				android:paddingRight="@dimen/space_small"/>
+
+			<TextView
+				tools:text="14%"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_rank"
+				android:layout_weight="1"
+				android:textSize="15sp"
+				android:layout_gravity="center_vertical"
+				android:gravity="right"
+				android:paddingLeft="@dimen/space_small"
+				android:paddingRight="@dimen/space_small"/>
+		</LinearLayout>
+
 	</LinearLayout>
 
-</LinearLayout>
+</layout>
