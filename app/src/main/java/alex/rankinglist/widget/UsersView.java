@@ -13,6 +13,7 @@ import java.util.Map;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
+import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.RankedUser;
 import alex.rankinglist.widget.model.User;
 import butterknife.BindDimen;
@@ -21,6 +22,7 @@ import butterknife.ButterKnife;
 
 public class UsersView extends FrameLayout {
 	@BindDimen(R.dimen.user_view_height) int userViewHeightPx;
+	float userViewHeightHalfPx;
 
 	private Map<Float, UsersGroup> usersGroups = new HashMap<>();
 	private List<RankedUser> rankedUsers;
@@ -43,6 +45,7 @@ public class UsersView extends FrameLayout {
 
 	void init() {
 		ButterKnife.bind(this);
+		userViewHeightHalfPx = userViewHeightPx / 2.0f;
 	}
 
 	@Override
@@ -57,7 +60,11 @@ public class UsersView extends FrameLayout {
 			for (int i = 0; i < getChildCount(); ++i) {
 				View child = getChildAt(i);
 				LayoutParams params = (LayoutParams) child.getLayoutParams();
-				params.topMargin = Math.min((int) (h * (1 - rankedUsers.get(i).relativeRank) + userViewHeightPx/2), h - userViewHeightPx);
+
+				float posFromTopPx = h * (1 - rankedUsers.get(i).relativeRank);
+				float centeredPosFromTopPx = posFromTopPx - userViewHeightPx/2;
+				params.topMargin = (int) MathUtil.InRange(centeredPosFromTopPx, 0, h - userViewHeightPx);
+
 				//params.topMargin = 0;
 				child.setLayoutParams(params);
 				if (topMarginMax == -1) {
@@ -93,6 +100,10 @@ public class UsersView extends FrameLayout {
 			RankedUsersView rankedUsersView = new RankedUsersView(getContext());
 			rankedUsersView.setModel(user);
 			addView(rankedUsersView);
+
+			/*FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) rankedUsersView.getLayoutParams();
+			params.gravity = Gravity.BOTTOM;
+			rankedUsersView.setLayoutParams(params);*/
 		}
 	}
 
