@@ -100,23 +100,27 @@ public class RankingListView extends ScrollView {
 
 			View rootViewGroup = binding.listRankingViews;
 
-
 			float scaleFactor = 1 + (detector.getScaleFactor() - 1) * 3;
 			ViewGroup.LayoutParams params = rootViewGroup.getLayoutParams();
 
-			float newHeight = rootViewGroup.getHeight() * scaleFactor,
-					newScrollY = getScrollY() * scaleFactor;
+			float scrollY = getScrollY() + detector.getFocusY();
+			float coef = scrollY / rootViewGroup.getHeight();
 
-				LogUtil.log("-------------------------------- prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d",
-						getScrollY(), (float) getScrollY() / rootViewGroup.getHeight(),
+			float newHeight = rootViewGroup.getHeight() * scaleFactor,
+					newScrollY = newHeight * coef - detector.getFocusY();//scrollY * scaleFactor;
+
+			LogUtil.log("--------------------------------");
+
+				/*LogUtil.log("-------------------------------- prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d",
+						(int) scrollY, (float) scrollY / rootViewGroup.getHeight(),
 						(int) newScrollY, newScrollY / newHeight,
-						rootViewGroup.getHeight(), (int) newHeight);
+						rootViewGroup.getHeight(), (int) newHeight);*/
 
 				//View rootViewGroup = binding.listRankingViews.getChildAt(i);
 				params.height = (int) newHeight;
 				rootViewGroup.setLayoutParams(params);
 
-			setScrollY((int) newScrollY);
+			setScrollY((int) newScrollY);//(newScrollY - detector.getFocusY()));
 			//}
 			return true;
 		}
