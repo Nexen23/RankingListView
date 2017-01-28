@@ -13,7 +13,6 @@ import junit.framework.Assert;
 import java.util.List;
 
 import alex.rankinglist.R;
-import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.RankedUser;
 import alex.rankinglist.widget.model.User;
 import butterknife.BindView;
@@ -64,7 +63,6 @@ public class RankedUsersView extends FrameLayout {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-		LogUtil.log(this, "measured=%d, %s",
-				getMeasuredHeight(), LogUtil.MeasureSpecToString(heightMeasureSpec));
+		//LogUtil.log(this, "measured=%d, %s", getMeasuredHeight(), LogUtil.MeasureSpecToString(heightMeasureSpec));
 	}
 }

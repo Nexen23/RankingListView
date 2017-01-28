@@ -52,27 +52,26 @@ public class UsersView extends FrameLayout {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
+		updateUsersPositions(w, h);
 	}
 
-	public void updateUsersPositions(int h) {
-		if (rankedUsers != null && getHeight() > 0) { // HACK: getHeight() can't be used during onMeasure!
-			int topMarginMax = -1;
+	public void updateUsersPositions(int width, int height) {
+		if (rankedUsers != null) {
+			LogUtil.log(this, "updateUsersPositions(%d)", height);
 			for (int i = 0; i < getChildCount(); ++i) {
 				View child = getChildAt(i);
 				LayoutParams params = (LayoutParams) child.getLayoutParams();
 
-				float posFromTopPx = h * (1 - rankedUsers.get(i).relativeRank);
+				float posFromTopPx = height * (1 - rankedUsers.get(i).relativeRank);
 				float centeredPosFromTopPx = posFromTopPx - userViewHeightPx/2;
-				params.topMargin = (int) MathUtil.InRange(centeredPosFromTopPx, 0, h - userViewHeightPx);
+				params.topMargin = (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 
-				//params.topMargin = 0;
 				child.setLayoutParams(params);
-				if (topMarginMax == -1) {
-					topMarginMax = params.topMargin;
-					LogUtil.log(this, "height=%d, topMargin max=%d; score=%.2f; px=%d",
-							h, topMarginMax, rankedUsers.get(i).relativeRank, userViewHeightPx);
-				}
 			}
+
+			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+			int heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+			measureChildren(widthSpec, heightSpec);
 		}
 	}
 
@@ -86,12 +85,6 @@ public class UsersView extends FrameLayout {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		LogUtil.log(this, "onMeasure() %s", LogUtil.MeasureSpecToString(heightMeasureSpec));
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-		if (lastMeasuredHeight == null || lastMeasuredHeight != getMeasuredHeight()) {
-			LogUtil.log(this, "onMeasure() -- updateUsersPositions(%d)", getMeasuredHeight());
-			lastMeasuredHeight = getMeasuredHeight();
-			updateUsersPositions(lastMeasuredHeight);
-			measureChildren(widthMeasureSpec, heightMeasureSpec);
-		}
 	}
 
 	public void setModel(List<RankedUser> rankedUsers) {
@@ -100,10 +93,6 @@ public class UsersView extends FrameLayout {
 			RankedUsersView rankedUsersView = new RankedUsersView(getContext());
 			rankedUsersView.setModel(user);
 			addView(rankedUsersView);
-
-			/*FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) rankedUsersView.getLayoutParams();
-			params.gravity = Gravity.BOTTOM;
-			rankedUsersView.setLayoutParams(params);*/
 		}
 	}
 
