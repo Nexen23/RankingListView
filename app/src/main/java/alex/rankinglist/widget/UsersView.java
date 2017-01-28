@@ -27,6 +27,7 @@ public class UsersView extends FrameLayout {
 	private List<UsersGroup> usersGroups = new LinkedList<>();
 	private List<PosedUser> users;
 	private Rank rank;
+	private boolean isGroupingEnabled = true;
 
 	public UsersView(Context context) {
 		super(context);
@@ -116,7 +117,7 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void composeOrBreakUsersGroups(int height) {
-		if (!usersGroups.isEmpty()) {
+		if (isGroupingEnabled && !usersGroups.isEmpty()) {
 			ListIterator<UsersGroup> groupsIter = usersGroups.listIterator();
 			UsersGroup itGroup = groupsIter.next();
 //			while (groupsIter.hasNext()) {
