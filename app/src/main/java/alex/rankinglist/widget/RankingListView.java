@@ -94,6 +94,16 @@ public class RankingListView extends ScrollView {
 
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		int minChildHeight = Integer.MAX_VALUE;
+		for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
+			minChildHeight = Math.min(minChildHeight, binding.listRankingViews.getChildAt(i).getMeasuredHeight());
+		}
+
+		for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
+			RankingView child = (RankingView) binding.listRankingViews.getChildAt(i);
+			child.setSharedHeight(minChildHeight);
+		}
+
 		super.onLayout(changed, l, t, r, b);
 
 		if (scrollNext != null) {

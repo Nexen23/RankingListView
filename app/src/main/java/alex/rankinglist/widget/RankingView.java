@@ -23,6 +23,7 @@ import alex.rankinglist.widget.model.User;
 public class RankingView extends FrameLayout {
 	int cornerRadiusPx, spaceBetweenChilrenPx;
 	WidgetRankingBinding binding;
+	private int sharedHeight;
 
 	public RankingView(Context context) {
 		super(context);
@@ -45,15 +46,19 @@ public class RankingView extends FrameLayout {
 		spaceBetweenChilrenPx = getResources().getDimensionPixelSize(R.dimen.space_normal);
 	}
 
+	public void setSharedHeight(int imaginaryHeight) {
+		this.sharedHeight = imaginaryHeight;
+	}
+
 	@Override
 	protected void onSizeChanged(int width, int height, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
 		super.onSizeChanged(width, height, oldw, oldh);
 		int requiredHeight = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivRank.getHeight()
 				+ spaceBetweenChilrenPx * 2;
-		boolean shouldHideIcon = requiredHeight > height;
-		LogUtil.i(this, "onSizeChanged: requiredHeight=%d :: realHeight=%d :: shouldHideIcon=%s",
-				requiredHeight, height, shouldHideIcon);
+		boolean shouldHideIcon = requiredHeight > sharedHeight;
+		LogUtil.i(this, "onSizeChanged: requiredHeight=%d :: realHeight=%d <shared=%d> :: shouldHideIcon=%s",
+				requiredHeight, height, sharedHeight, shouldHideIcon);
 		if (shouldHideIcon) {
 			binding.ivRank.setVisibility(GONE);
 		} else {
