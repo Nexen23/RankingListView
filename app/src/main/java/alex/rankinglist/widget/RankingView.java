@@ -44,6 +44,7 @@ public class RankingView extends FrameLayout {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner);
 		spaceBetweenChilrenPx = getResources().getDimensionPixelSize(R.dimen.space_normal);
+		setMinimumHeight(binding.getRoot().getMinimumHeight());
 	}
 
 	public void setSharedHeight(int imaginaryHeight) {

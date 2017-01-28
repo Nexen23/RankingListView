@@ -24,6 +24,7 @@ import alex.rankinglist.widget.model.User;
 public class RankingListView extends ScrollView {
 	WidgetRankingListBinding binding;
 	ScaleGestureDetector scaleDetector;
+	Integer rankingsListViewHeightMin;
 
 	public RankingListView(Context context) {
 		super(context);
@@ -47,16 +48,23 @@ public class RankingListView extends ScrollView {
 	}
 
 	private void fillRankingList(List<Ranking> rankings) {
+		LinearLayout rankingsListView = binding.listRankingViews;
+
+		rankingsListViewHeightMin = 0;
+
 		for (Ranking ranking : rankings) {
 			RankingView rankingView = new RankingView(getContext());
 			rankingView.setModel(ranking);
-			binding.listRankingViews.addView(rankingView, 0);
+			rankingsListView.addView(rankingView, 0);
 
 			LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) rankingView.getLayoutParams();
 			params.weight = 1;
 			params.height = 0;
 			rankingView.setLayoutParams(params);
+			rankingsListViewHeightMin += rankingView.getMinimumHeight();
 		}
+
+		rankingsListViewHeightMin += rankingsListView.getPaddingBottom() + rankingsListView.getPaddingTop();
 	}
 
 	@Override
@@ -127,7 +135,7 @@ public class RankingListView extends ScrollView {
 		float scrollY = curScrollY + focusY;
 		float coef = scrollY / rootHeight;
 
-		final float newHeight = rootHeight * scaleFactor,
+		final float newHeight = Math.max(rootHeight * scaleFactor, rankingsListViewHeightMin),
 				newScrollY = newHeight * coef - focusY;//scrollY * scaleFactor;
 
 		//LogUtil.log("--------------------------------");

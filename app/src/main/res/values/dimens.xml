@@ -10,5 +10,7 @@
 	<dimen name="user_avatar_size">32dp</dimen>
 	<dimen name="border_size">2dp</dimen>
 	<dimen name="border_corner">5dp</dimen>
+
 	<dimen name="user_view_height">35dp</dimen>
+	<dimen name="ranking_view_height_min">75dp</dimen>
 </resources>
