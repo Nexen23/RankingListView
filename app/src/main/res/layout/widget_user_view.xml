@@ -26,11 +26,13 @@
 			android:layout_height="wrap_content">
 
 			<TextView
-				tools:text="Username"
+				tools:text="Username (and some very long-long text here)"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:id="@+id/tv_name"
 				android:layout_weight="1"
+				android:ellipsize="end"
+				android:maxLines="1"
 				android:textSize="17sp"
 				android:textColor="@color/colorPrimaryDark"
 				android:layout_gravity="center_vertical"
@@ -38,11 +40,20 @@
 				android:paddingRight="@dimen/space_small"/>
 
 			<TextView
+				tools:text="23"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_group_size"
+				android:textSize="18sp"
+				android:textColor="@android:color/holo_green_dark"
+				android:layout_gravity="center_vertical"
+				android:paddingRight="@dimen/space_small"/>
+
+			<TextView
 				tools:text="14%"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:id="@+id/tv_rank"
-				android:layout_weight="1"
 				android:textSize="15sp"
 				android:layout_gravity="center_vertical"
 				android:gravity="right"

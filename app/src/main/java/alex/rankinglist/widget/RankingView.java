@@ -8,14 +8,12 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import alex.rankinglist.R;
 import alex.rankinglist.databinding.WidgetRankingBinding;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
-import alex.rankinglist.widget.model.RankedUser;
 import alex.rankinglist.widget.model.Ranking;
 import alex.rankinglist.widget.model.User;
 
@@ -85,11 +83,7 @@ public class RankingView extends FrameLayout {
 	}
 
 	private void setUsers(Rank rank, List<User> users) {
-		List<RankedUser> rankedUsers = new ArrayList<>(users.size());
-		for (int i = 0; i < users.size(); ++i) {
-			rankedUsers.add(new RankedUser(users.get(i), rank));
-		}
-		binding.vUsers.setModel(rankedUsers);
+		binding.vUsers.setModel(rank, users);
 	}
 
 	private void setRank(Rank rank) {

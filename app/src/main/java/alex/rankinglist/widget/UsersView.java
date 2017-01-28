@@ -3,30 +3,30 @@ package alex.rankinglist.widget;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.FrameLayout;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.ListIterator;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
-import alex.rankinglist.widget.model.RankedUser;
+import alex.rankinglist.widget.model.PosedUser;
+import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
-import butterknife.BindDimen;
-import butterknife.ButterKnife;
+import alex.rankinglist.widget.model.UsersGroup;
 
 
 public class UsersView extends FrameLayout {
-	@BindDimen(R.dimen.user_view_height) int userViewHeightPx;
+	int userViewHeightPx;
 	float userViewHeightHalfPx;
 
-	private Map<Float, UsersGroup> usersGroups = new HashMap<>();
-	private List<RankedUser> rankedUsers;
-	private Integer lastMeasuredHeight;
+	private List<UsersGroup> usersGroups = new LinkedList<>();
+	private List<PosedUser> users;
+	private Rank rank;
 
 	public UsersView(Context context) {
 		super(context);
@@ -44,41 +44,8 @@ public class UsersView extends FrameLayout {
 	}
 
 	void init() {
-		ButterKnife.bind(this);
+		userViewHeightPx = getResources().getDimensionPixelSize(R.dimen.user_view_height);
 		userViewHeightHalfPx = userViewHeightPx / 2.0f;
-	}
-
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		LogUtil.log(this, "onSizeChanged()");
-		super.onSizeChanged(w, h, oldw, oldh);
-		updateUsersPositions(w, h);
-	}
-
-	public void updateUsersPositions(int width, int height) {
-		if (rankedUsers != null) {
-			LogUtil.log(this, "updateUsersPositions(%d)", height);
-			for (int i = 0; i < getChildCount(); ++i) {
-				View child = getChildAt(i);
-				LayoutParams params = (LayoutParams) child.getLayoutParams();
-
-				float posFromTopPx = height * (1 - rankedUsers.get(i).relativeRank);
-				float centeredPosFromTopPx = posFromTopPx - userViewHeightPx/2;
-				params.topMargin = (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
-
-				child.setLayoutParams(params);
-			}
-
-			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
-			int heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
-			measureChildren(widthSpec, heightSpec);
-		}
-	}
-
-	@Override
-	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-		LogUtil.log(this, "onLayout()");
-		super.onLayout(changed, left, top, right, bottom);
 	}
 
 	@Override
@@ -87,27 +54,99 @@ public class UsersView extends FrameLayout {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
-	public void setModel(List<RankedUser> rankedUsers) {
-		this.rankedUsers = rankedUsers;
-		for (RankedUser user : rankedUsers) {
-			RankedUsersView rankedUsersView = new RankedUsersView(getContext());
-			rankedUsersView.setModel(user);
-			addView(rankedUsersView);
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		LogUtil.log(this, "onSizeChanged()");
+		super.onSizeChanged(w, h, oldw, oldh);
+		updateChilds(w, h);
+	}
+
+	@Override
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+		LogUtil.log(this, "onLayout()");
+		super.onLayout(changed, left, top, right, bottom);
+	}
+
+	public void setModel(Rank rank, List<User> users) {
+		this.rank = rank;
+		usersGroups.clear();
+
+		this.users = new ArrayList<>(users.size());
+		for (User user : users) {
+			PosedUser posedUser = new PosedUser(rank, user);
+			this.users.add(posedUser);
+			usersGroups.add(new UsersGroup(posedUser));
+		}
+
+		Collections.sort(usersGroups);
+	}
+
+	private void updateChilds(int width, int height) {
+		if (!usersGroups.isEmpty()) {
+			LogUtil.log(this, "updateChilds(height=%d)", height);
+
+			updateUsersPoses(height);
+			updateUsersGroupsPoses(height);
+			composeOrBreakUsersGroups(height);
+			createOrRemoveUsersGroupsViews();
+			placeUsersGroupsViews();
+
+			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+			int heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+			measureChildren(widthSpec, heightSpec);
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	class UsersGroup {
-		public final User user;
-		public final List<User> group;
+	private int calcAbsolutePos(int height, float relativePos) {
+		float posFromTopPx = height * (1 - relativePos);
+		float centeredPosFromTopPx = posFromTopPx - userViewHeightPx / 2;
+		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
+	}
 
-		public UsersGroup(User user) {
-			this(user, new LinkedList<User>());
+	private void updateUsersPoses(int height) {
+		for (PosedUser user : users) {
+			user.pos.absolute = calcAbsolutePos(height, user.pos.relative);
+		}
+	}
+
+	private void updateUsersGroupsPoses(int height) {
+		for (UsersGroup group : usersGroups) {
+			group.pos.absolute = calcAbsolutePos(height, group.pos.relative);
+		}
+	}
+
+	private void composeOrBreakUsersGroups(int height) {
+		if (!usersGroups.isEmpty()) {
+			ListIterator<UsersGroup> groupsIter = usersGroups.listIterator();
+			UsersGroup itGroup = groupsIter.next();
+//			while (groupsIter.hasNext()) {
+//				if ()
+//			}
+		}
+	}
+
+	private void createOrRemoveUsersGroupsViews() {
+		int groupsCount = usersGroups.size(), childsCount = getChildCount();
+		for (int i = childsCount; i < groupsCount; ++i) {
+			addView(new UsersGroupView(getContext()));
 		}
 
-		public UsersGroup(User user, List<User> group) {
-			this.user = user;
-			this.group = group;
+		if (childsCount > groupsCount) {
+			removeViews(groupsCount, childsCount - groupsCount);
+		}
+	}
+
+	private void placeUsersGroupsViews() {
+		for (int i = 0; i < getChildCount(); ++i) {
+			UsersGroup usersGroup = usersGroups.get(i);
+
+			UsersGroupView child = (UsersGroupView) getChildAt(i);
+			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
+			params.topMargin = usersGroup.pos.absolute;
+			child.setLayoutParams(params);
+
+			float groupScore = usersGroup.pos.relative * (rank.scoreMax - rank.scoreMin) + rank.scoreMin;
+			child.setModel(usersGroup.mainUser, usersGroup.users, groupScore);
 		}
 	}
 }
