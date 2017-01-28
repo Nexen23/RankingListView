@@ -98,7 +98,7 @@ public class UsersView extends FrameLayout {
 	}
 
 	private int calcAbsolutePos(int height, float relativePos) {
-		float posFromTopPx = height * (1 - relativePos);
+		float posFromTopPx = height * relativePos;
 		float centeredPosFromTopPx = posFromTopPx - userViewHeightPx / 2;
 		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 	}
@@ -138,14 +138,14 @@ public class UsersView extends FrameLayout {
 
 	private void placeUsersGroupsViews() {
 		for (int i = 0; i < getChildCount(); ++i) {
-			UsersGroup usersGroup = usersGroups.get(i);
+			UsersGroup usersGroup = usersGroups.get(getChildCount() - 1 - i); // HACK: find out why this cause correct z-ordering happen
 
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 			params.topMargin = usersGroup.pos.absolute;
 			child.setLayoutParams(params);
 
-			float groupScore = usersGroup.pos.relative * (rank.scoreMax - rank.scoreMin) + rank.scoreMin;
+			float groupScore = (1 - usersGroup.pos.relative) * (rank.scoreMax - rank.scoreMin) + rank.scoreMin;
 			child.setModel(usersGroup.mainUser, usersGroup.users, groupScore);
 		}
 	}
