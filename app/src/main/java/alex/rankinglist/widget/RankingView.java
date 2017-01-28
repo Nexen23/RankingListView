@@ -21,7 +21,7 @@ import alex.rankinglist.widget.model.User;
 
 
 public class RankingView extends FrameLayout {
-	int cornerRadiusPx;
+	int cornerRadiusPx, spaceBetweenChilrenPx;
 	WidgetRankingBinding binding;
 
 	public RankingView(Context context) {
@@ -42,17 +42,19 @@ public class RankingView extends FrameLayout {
 	void init() {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner);
+		spaceBetweenChilrenPx = getResources().getDimensionPixelSize(R.dimen.space_normal);
 	}
 
 	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+	protected void onSizeChanged(int width, int height, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
-		super.onSizeChanged(w, h, oldw, oldh);
-		int sum = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivRank.getHeight();
-		boolean b = sum > h;
-		LogUtil.i(this, "onSizeChanged: tvScore=%d, tvTitle=%d, ivRank=%d, sum=%d :: h=%d :: b=%s",
-				binding.tvScore.getHeight(), binding.tvTitle.getHeight(), binding.ivRank.getHeight(), sum, h, b);
-		if (b) {
+		super.onSizeChanged(width, height, oldw, oldh);
+		int requiredHeight = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivRank.getHeight()
+				+ spaceBetweenChilrenPx * 2;
+		boolean shouldHideIcon = requiredHeight > height;
+		LogUtil.i(this, "onSizeChanged: requiredHeight=%d :: realHeight=%d :: shouldHideIcon=%s",
+				requiredHeight, height, shouldHideIcon);
+		if (shouldHideIcon) {
 			binding.ivRank.setVisibility(GONE);
 		} else {
 			binding.ivRank.setVisibility(VISIBLE);
