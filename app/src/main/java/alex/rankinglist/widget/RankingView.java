@@ -1,6 +1,8 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
+import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.widget.FrameLayout;
 import java.util.ArrayList;
 import java.util.List;
 
+import alex.rankinglist.R;
 import alex.rankinglist.databinding.WidgetRankingBinding;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -18,6 +21,7 @@ import alex.rankinglist.widget.model.User;
 
 
 public class RankingView extends FrameLayout {
+	int cornerRadiusPx;
 	WidgetRankingBinding binding;
 
 	public RankingView(Context context) {
@@ -37,6 +41,7 @@ public class RankingView extends FrameLayout {
 
 	void init() {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
+		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner);
 	}
 
 	@Override
@@ -83,6 +88,14 @@ public class RankingView extends FrameLayout {
 		binding.ivRank.setImageResource(rank.iconResId);
 		binding.tvTitle.setText(rank.name);
 		binding.tvScore.setText(String.format("%s%%", String.valueOf(rank.scoreMax)));
-		binding.lScoresRuler.setBackgroundColor(rank.backgroundColor);
+		setBackground(rank.backgroundColor, rank.scoreMin == 0, rank.scoreMax == 100);
+	}
+
+	private void setBackground(@ColorInt int color, boolean isBottomRank, boolean isTopRank) {
+		GradientDrawable drawable = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{color, color});
+		final int leftTopCorner = isTopRank ? cornerRadiusPx : 0;
+		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
+		drawable.setCornerRadii(new float[] {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner});
+		binding.lScoresRuler.setBackground(drawable);
 	}
 }
