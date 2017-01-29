@@ -109,21 +109,19 @@ public class UsersView extends FrameLayout {
 		if (isGroupingEnabled) {
 			usersGroups.clear();
 			List<PosedUser> group = new LinkedList<>();
-			PosedUser groupLastUser = users.get(0), currentUser;
-			int groupPos = groupLastUser.pos.absolute;
-			group.add(groupLastUser);
+			PosedUser currentUser = users.get(0);
+			int groupPos = currentUser.pos.absolute;
+			group.add(currentUser);
 			for (int i = 1; i < users.size(); ++i) {
 				currentUser = users.get(i);
-				if (currentUser.pos.absolute + userViewHeightPx > groupLastUser.pos.absolute) {
+				if (currentUser.pos.absolute + userViewHeightPx > groupPos) {
 					group.add(currentUser);
-					groupPos = (groupLastUser.pos.absolute + currentUser.pos.absolute) / 2;
-					groupLastUser = currentUser;
+					groupPos = (groupPos + currentUser.pos.absolute) / 2;
 				} else {
 					usersGroups.add(new UsersGroup(group, groupPos));
 					group = new LinkedList<>();
 					group.add(currentUser);
-					groupLastUser = currentUser;
-					groupPos = groupLastUser.pos.absolute;
+					groupPos = currentUser.pos.absolute;
 				}
 			}
 
@@ -190,6 +188,7 @@ public class UsersView extends FrameLayout {
 
 	private float calcScoreByPos(int height, int absolutePos) {
 		float relativePos = (float) absolutePos / height;
+		LogUtil.err(this, "%d / %d = %.3f", absolutePos, height, relativePos);
 		return (rank.scoreMax - rank.scoreMin) * relativePos + rank.scoreMin;
 	}
 }
