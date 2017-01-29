@@ -175,7 +175,7 @@ public class UsersView extends FrameLayout {
 				}
 			} else {
 				Assert.assertNotNull(user);
-				child.setModel(user);
+				child.setModel(user, null, calcScoreByPos(getHeight(), user.pos.absolute));
 			}
 		}
 	}
@@ -186,9 +186,9 @@ public class UsersView extends FrameLayout {
 		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 	}
 
-	private float calcScoreByPos(int height, int absolutePos) {
-		float relativePos = (float) absolutePos / height;
-		LogUtil.err(this, "%d / %d = %.3f", absolutePos, height, relativePos);
+	private float calcScoreByPos(int height, int absolutePosCentered) {
+		float absolutePos = absolutePosCentered + userViewHeightHalfPx;
+		float relativePos = (height - absolutePos) / height;
 		return (rank.scoreMax - rank.scoreMin) * relativePos + rank.scoreMin;
 	}
 }
