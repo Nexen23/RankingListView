@@ -23,11 +23,11 @@
 		<LinearLayout
 			android:orientation="horizontal"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content">
+			android:layout_height="match_parent">
 
 			<TextView
 				tools:text="Username (and some very long-long text here)"
-				android:layout_width="wrap_content"
+				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:id="@+id/tv_name"
 				android:layout_weight="1"
@@ -40,11 +40,11 @@
 				android:paddingRight="@dimen/space_small"/>
 
 			<TextView
-				tools:text="23"
+				tools:text="+23"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:id="@+id/tv_group_size"
-				android:textSize="18sp"
+				android:textSize="12sp"
 				android:textColor="@android:color/holo_green_dark"
 				android:layout_gravity="center_vertical"
 				android:paddingRight="@dimen/space_small"/>

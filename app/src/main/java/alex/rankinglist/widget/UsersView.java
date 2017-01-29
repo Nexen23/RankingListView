@@ -100,7 +100,7 @@ public class UsersView extends FrameLayout {
 
 	private int calcAbsolutePos(int height, float relativePos) {
 		float posFromTopPx = height * relativePos;
-		float centeredPosFromTopPx = posFromTopPx - userViewHeightPx / 2;
+		float centeredPosFromTopPx = posFromTopPx - userViewHeightHalfPx;
 		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 	}
 
@@ -118,11 +118,29 @@ public class UsersView extends FrameLayout {
 
 	private void composeOrBreakUsersGroups(int height) {
 		if (isGroupingEnabled && !usersGroups.isEmpty()) {
+			// Compose
+			List<UsersGroup> newUsersGroups = new LinkedList<>();
 			ListIterator<UsersGroup> groupsIter = usersGroups.listIterator();
 			UsersGroup itGroup = groupsIter.next();
-//			while (groupsIter.hasNext()) {
-//				if ()
-//			}
+			while (groupsIter.hasNext()) {
+				UsersGroup nextGroup = groupsIter.next();
+
+				if (itGroup.pos.absolute + userViewHeightPx > nextGroup.pos.absolute) {
+					int posBetween = (itGroup.pos.absolute + nextGroup.pos.absolute) / 2;
+
+					itGroup = new UsersGroup(null, itGroup, nextGroup);
+
+					itGroup.pos.absolute = calcAbsolutePos(height, itGroup.pos.relative);
+				} else {
+					newUsersGroups.add(itGroup);
+					itGroup = groupsIter.hasNext() ? groupsIter.next() : nextGroup;
+				}
+			}
+			newUsersGroups.add(itGroup);
+			usersGroups.clear();
+			usersGroups.addAll(newUsersGroups);
+
+			// Break
 		}
 	}
 

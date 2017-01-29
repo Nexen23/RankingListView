@@ -1,5 +1,7 @@
 package alex.rankinglist.widget.model;
 
+import android.support.annotation.Nullable;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,8 +22,8 @@ public class UsersGroup implements Comparable<UsersGroup> {
 	 * @param mainUser - is one of the users
 	 * @param users - must be ascending sorted
 	 */
-	public UsersGroup(PosedUser mainUser, List<PosedUser> users) {
-		this.mainUser = mainUser;
+	public UsersGroup(@Nullable PosedUser mainUser, List<PosedUser> users) {
+		this.mainUser = mainUser == null ? users.get(0) : mainUser;
 		users.addAll(users);
 		float relativePosSum = 0;
 		for (PosedUser user : users) {
@@ -35,8 +37,8 @@ public class UsersGroup implements Comparable<UsersGroup> {
 	 * @param a - users must be ascending sorted
 	 * @param b - users must be ascending sorted
 	 */
-	public UsersGroup(PosedUser mainUser, UsersGroup a, UsersGroup b) {
-		this.mainUser = mainUser;
+	public UsersGroup(@Nullable PosedUser mainUser, UsersGroup a, UsersGroup b) {
+		this.mainUser = mainUser == null ? a.users.get(0) : mainUser;
 		pos = new Position((a.pos.relative + b.pos.relative) / 2);
 
 		if (a.users.isEmpty() || b.users.isEmpty()) {
