@@ -5,15 +5,17 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import junit.framework.Assert;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
+import alex.rankinglist.util.SizeUtil;
 import alex.rankinglist.widget.model.PosedUser;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
@@ -21,10 +23,11 @@ import alex.rankinglist.widget.model.UsersGroup;
 
 
 public class UsersView extends FrameLayout {
+
 	int userViewHeightPx;
 	float userViewHeightHalfPx;
 
-	private List<UsersGroup> usersGroups = new LinkedList<>();
+	private List<UsersGroup> usersGroups;
 	private List<PosedUser> users;
 	private Rank rank;
 	private boolean isGroupingEnabled = true;
@@ -47,6 +50,7 @@ public class UsersView extends FrameLayout {
 	void init() {
 		userViewHeightPx = getResources().getDimensionPixelSize(R.dimen.user_view_height);
 		userViewHeightHalfPx = userViewHeightPx / 2.0f;
+		usersGroups = new ArrayList<>(SizeUtil.GetWindowHeight(this) / userViewHeightPx);
 	}
 
 	@Override
@@ -68,27 +72,24 @@ public class UsersView extends FrameLayout {
 		super.onLayout(changed, left, top, right, bottom);
 	}
 
-	public void setModel(Rank rank, List<User> users) {
-		this.rank = rank;
-		usersGroups.clear();
+	public void setModel(Rank _rank, List<User> _users) {
+		rank = _rank;
+		users = new ArrayList<>(_users.size());
 
-		this.users = new ArrayList<>(users.size());
-		for (User user : users) {
-			PosedUser posedUser = new PosedUser(rank, user);
-			this.users.add(posedUser);
-			usersGroups.add(new UsersGroup(posedUser));
+		for (User user : _users) {
+			users.add(new PosedUser(rank, user));
 		}
+		Collections.sort(users);
 
-		Collections.sort(usersGroups);
+		usersGroups.clear();
 	}
 
 	private void updateChilds(int width, int height) {
-		if (!usersGroups.isEmpty()) {
+		if (!users.isEmpty()) {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
 			updateUsersPoses(height);
-			updateUsersGroupsPoses(height);
-			composeOrBreakUsersGroups(height);
+			composeUsersGroups();
 			createOrRemoveUsersGroupsViews();
 			placeUsersGroupsViews();
 
@@ -98,54 +99,48 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
-	private int calcAbsolutePos(int height, float relativePos) {
-		float posFromTopPx = height * relativePos;
-		float centeredPosFromTopPx = posFromTopPx - userViewHeightHalfPx;
-		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
-	}
-
 	private void updateUsersPoses(int height) {
 		for (PosedUser user : users) {
 			user.pos.absolute = calcAbsolutePos(height, user.pos.relative);
 		}
 	}
 
-	private void updateUsersGroupsPoses(int height) {
-		for (UsersGroup group : usersGroups) {
-			group.pos.absolute = calcAbsolutePos(height, group.pos.relative);
-		}
-	}
-
-	private void composeOrBreakUsersGroups(int height) {
-		if (isGroupingEnabled && !usersGroups.isEmpty()) {
-			// Compose
-			List<UsersGroup> newUsersGroups = new LinkedList<>();
-			ListIterator<UsersGroup> groupsIter = usersGroups.listIterator();
-			UsersGroup itGroup = groupsIter.next();
-			while (groupsIter.hasNext()) {
-				UsersGroup nextGroup = groupsIter.next();
-
-				if (itGroup.pos.absolute + userViewHeightPx > nextGroup.pos.absolute) {
-					int posBetween = (itGroup.pos.absolute + nextGroup.pos.absolute) / 2;
-
-					itGroup = new UsersGroup(null, itGroup, nextGroup);
-
-					itGroup.pos.absolute = calcAbsolutePos(height, itGroup.pos.relative);
+	private void composeUsersGroups() {
+		if (isGroupingEnabled) {
+			usersGroups.clear();
+			List<PosedUser> group = new LinkedList<>();
+			PosedUser groupLastUser = users.get(0), currentUser;
+			int groupPos = groupLastUser.pos.absolute;
+			group.add(groupLastUser);
+			for (int i = 1; i < users.size(); ++i) {
+				currentUser = users.get(i);
+				if (currentUser.pos.absolute + userViewHeightPx > groupLastUser.pos.absolute) {
+					group.add(currentUser);
+					groupPos = (groupLastUser.pos.absolute + currentUser.pos.absolute) / 2;
+					groupLastUser = currentUser;
 				} else {
-					newUsersGroups.add(itGroup);
-					itGroup = groupsIter.hasNext() ? groupsIter.next() : nextGroup;
+					usersGroups.add(new UsersGroup(group, groupPos));
+					group = new LinkedList<>();
+					group.add(currentUser);
+					groupLastUser = currentUser;
+					groupPos = groupLastUser.pos.absolute;
 				}
 			}
-			newUsersGroups.add(itGroup);
-			usersGroups.clear();
-			usersGroups.addAll(newUsersGroups);
 
-			// Break
+			usersGroups.add(new UsersGroup(group, groupPos));
+
+			for (UsersGroup usersGroup : usersGroups) {
+				String usersString = usersGroup.users.get(0).name;
+				for (int i = 1; i < usersGroup.users.size(); ++i) {
+					usersString = String.format("%s, %s", usersString, users.get(i).name);
+				}
+				LogUtil.i(this, "main=%s [%s] {%d}", usersGroup.mainUser.name, usersString, usersGroup.posAbsolute);
+			}
 		}
 	}
 
 	private void createOrRemoveUsersGroupsViews() {
-		int groupsCount = usersGroups.size(), childsCount = getChildCount();
+		int groupsCount = isGroupingEnabled ? usersGroups.size() : users.size(), childsCount = getChildCount();
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
@@ -157,15 +152,44 @@ public class UsersView extends FrameLayout {
 
 	private void placeUsersGroupsViews() {
 		for (int i = 0; i < getChildCount(); ++i) {
-			UsersGroup usersGroup = usersGroups.get(getChildCount() - 1 - i); // HACK: find out why this cause correct z-ordering happen
+			UsersGroup usersGroup = null;
+			PosedUser user = null;
+			int viewPos;
+			if (isGroupingEnabled) {
+				usersGroup = usersGroups.get(getChildCount() - 1 - i); // HACK: find out why this cause correct z-ordering happen
+				viewPos = usersGroup.posAbsolute;
+			} else {
+				user = users.get(getChildCount() - 1 - i);
+				viewPos = user.pos.absolute;
+			}
 
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
-			params.topMargin = usersGroup.pos.absolute;
+			params.topMargin = viewPos;
 			child.setLayoutParams(params);
 
-			float groupScore = (1 - usersGroup.pos.relative) * (rank.scoreMax - rank.scoreMin) + rank.scoreMin;
-			child.setModel(usersGroup.mainUser, usersGroup.users, groupScore);
+			if (isGroupingEnabled) {
+				Assert.assertNotNull(usersGroup);
+				if (usersGroup.users.size() > 1) {
+					child.setModel(usersGroup.mainUser, usersGroup.users, calcScoreByPos(getHeight(), usersGroup.posAbsolute));
+				} else {
+					child.setModel(usersGroup.mainUser);
+				}
+			} else {
+				Assert.assertNotNull(user);
+				child.setModel(user);
+			}
 		}
+	}
+
+	private int calcAbsolutePos(int height, float relativePos) {
+		float posFromTopPx = height * relativePos;
+		float centeredPosFromTopPx = posFromTopPx - userViewHeightHalfPx;
+		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
+	}
+
+	private float calcScoreByPos(int height, int absolutePos) {
+		float relativePos = (float) absolutePos / height;
+		return (rank.scoreMax - rank.scoreMin) * relativePos + rank.scoreMin;
 	}
 }

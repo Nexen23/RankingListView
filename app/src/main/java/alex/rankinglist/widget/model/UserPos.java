@@ -1,14 +1,10 @@
 package alex.rankinglist.widget.model;
 
-public class Position {
+public class UserPos {
 	public final Float relative;
 	public Integer absolute;
 
-	public Position(Float relative) {
-		this.relative = relative;
-	}
-
-	public Position(Rank rank, User user) {
+	public UserPos(Rank rank, User user) {
 		relative = (rank.scoreMax - user.score) / (rank.scoreMax - rank.scoreMin);
 	}
 
@@ -17,10 +13,10 @@ public class Position {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		Position position = (Position) o;
+		UserPos userPos = (UserPos) o;
 
-		if (!relative.equals(position.relative)) return false;
-		return absolute != null ? absolute.equals(position.absolute) : position.absolute == null;
+		if (!relative.equals(userPos.relative)) return false;
+		return absolute != null ? absolute.equals(userPos.absolute) : userPos.absolute == null;
 
 	}
 

@@ -1,11 +1,11 @@
 package alex.rankinglist.widget.model;
 
-public class PosedUser extends User {
-	public final Position pos;
+public class PosedUser extends User implements Comparable<PosedUser> {
+	public final UserPos pos;
 
 	public PosedUser(Rank rank, User user) {
 		super(user.name, user.score);
-		pos = new Position(rank, this);
+		pos = new UserPos(rank, this);
 	}
 
 	@Override
@@ -25,5 +25,10 @@ public class PosedUser extends User {
 		int result = super.hashCode();
 		result = 31 * result + pos.hashCode();
 		return result;
+	}
+
+	@Override
+	public int compareTo(PosedUser o) {
+		return Float.compare(score, o.score);
 	}
 }
