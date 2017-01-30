@@ -6,8 +6,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
-import java.util.List;
-
 import alex.rankinglist.databinding.WidgetUserViewBinding;
 import alex.rankinglist.util.HtmlUtil;
 import alex.rankinglist.widget.model.User;
@@ -35,18 +33,18 @@ public class UsersGroupView extends FrameLayout {
 		this.binding = WidgetUserViewBinding.inflate(LayoutInflater.from(getContext()), this, true);
 	}
 
-	public void setModel(User mainUser, @Nullable List<? extends User> usersGroup, float groupScore) {
+	public void setModel(User mainUser, int groupSize, float groupScore) {
 		binding.tvName.setText(mainUser.name);
 		binding.tvRank.setText(String.format("%.1f%%", groupScore));
-		if (usersGroup != null && usersGroup.size() > 1) {
+		if (groupSize > 1) {
 			binding.tvGroupSize.setVisibility(VISIBLE);
-			binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", usersGroup.size())));
+			binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", groupSize)));
 		} else {
 			binding.tvGroupSize.setVisibility(GONE);
 		}
 	}
 
 	public void setModel(User user) {
-		setModel(user, null, user.score);
+		setModel(user, 1, user.score);
 	}
 }

@@ -7,30 +7,26 @@ import android.widget.FrameLayout;
 
 import junit.framework.Assert;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
-import alex.rankinglist.util.SizeUtil;
-import alex.rankinglist.widget.model.PosedUser;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
-import alex.rankinglist.widget.model.UsersGroup;
 
 
 public class UsersView extends FrameLayout {
-
+	Integer prevHeight;
 	int userViewHeightPx;
 	float userViewHeightHalfPx;
 
-	private List<UsersGroup> usersGroups;
-	private List<PosedUser> users;
-	private Rank rank;
 	private boolean isGroupingEnabled = true;
+	private List<TreeNode> usersGroups = new LinkedList<>();
+	private Rank rank;
 
 	public UsersView(Context context) {
 		super(context);
@@ -50,7 +46,6 @@ public class UsersView extends FrameLayout {
 	void init() {
 		userViewHeightPx = getResources().getDimensionPixelSize(R.dimen.user_view_height);
 		userViewHeightHalfPx = userViewHeightPx / 2.0f;
-		usersGroups = new ArrayList<>(SizeUtil.GetWindowHeight(this) / userViewHeightPx);
 	}
 
 	@Override
@@ -72,26 +67,34 @@ public class UsersView extends FrameLayout {
 		super.onLayout(changed, left, top, right, bottom);
 	}
 
-	public void setModel(Rank _rank, List<User> _users) {
-		rank = _rank;
-		users = new ArrayList<>(_users.size());
-
-		for (User user : _users) {
-			users.add(new PosedUser(rank, user));
-		}
-		Collections.sort(users);
-
+	public void setModel(Rank rank, List<User> users) {
+		this.rank = rank;
 		usersGroups.clear();
+		for (User user : users) {
+			usersGroups.add(new TreeNode(rank, user));
+		}
+		Collections.sort(usersGroups);
 	}
 
 	private void updateChilds(int width, int height) {
-		if (!users.isEmpty()) {
+		if (!usersGroups.isEmpty()) {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
-			updateUsersPoses(height);
-			composeUsersGroups();
-			createOrRemoveUsersGroupsViews();
-			placeUsersGroupsViews();
+			if (prevHeight == null || prevHeight > height) {
+				updateGroupsPoses(height);
+				composeGroups(height);
+			} else {
+				breakGroups(height);
+				updateGroupsPoses(height);
+			}
+			prevHeight = height;
+
+			createOrRemoveGroupsViews();
+			updateGroupsViews();
+
+			for (TreeNode usersGroup : usersGroups) {
+				LogUtil.i(this, "main=%s [%d] {%d}", usersGroup.mainUser.name, usersGroup.groupSize, usersGroup.posAbsolute);
+			}
 
 			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
 			int heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
@@ -99,83 +102,76 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
-	private void updateUsersPoses(int height) {
-		for (PosedUser user : users) {
-			user.pos.absolute = calcAbsolutePos(height, user.pos.relative);
+	private void updateGroupsPoses(int height) {
+		for (TreeNode group : usersGroups) {
+			group.updateAbsolutePos(height);
 		}
 	}
 
-	private void composeUsersGroups() {
+	private void composeGroups(int height) {
 		if (isGroupingEnabled) {
-			usersGroups.clear();
-			List<PosedUser> group = new LinkedList<>();
-			PosedUser currentUser = users.get(0);
-			int groupPos = currentUser.pos.absolute;
-			group.add(currentUser);
-			for (int i = 1; i < users.size(); ++i) {
-				currentUser = users.get(i);
-				if (currentUser.pos.absolute + userViewHeightPx > groupPos) {
-					group.add(currentUser);
-					groupPos = (groupPos + currentUser.pos.absolute) / 2;
-				} else {
-					usersGroups.add(new UsersGroup(group, groupPos));
-					group = new LinkedList<>();
-					group.add(currentUser);
-					groupPos = currentUser.pos.absolute;
+			List<TreeNode> groupsToDelete = new LinkedList<>();
+			ListIterator<TreeNode> iter = usersGroups.listIterator();
+			TreeNode prevGroup = iter.next(), curGroup;
+
+			while (iter.hasNext()) {
+				curGroup = iter.next();
+				if (prevGroup.posAbsolute + userViewHeightPx > curGroup.posAbsolute) {
+					TreeNode mergedGroups = new TreeNode(height, prevGroup, curGroup);
+					iter.set(mergedGroups);
+					groupsToDelete.add(prevGroup);
 				}
+				prevGroup = curGroup;
 			}
 
-			usersGroups.add(new UsersGroup(group, groupPos));
+			iter = usersGroups.listIterator();
+			ListIterator<TreeNode> deletionIter = groupsToDelete.listIterator();
+			TreeNode deletingGroup = deletionIter.hasNext() ? deletionIter.next() : null;
 
-			for (UsersGroup usersGroup : usersGroups) {
-				String usersString = usersGroup.users.get(0).name;
-				for (int i = 1; i < usersGroup.users.size(); ++i) {
-					usersString = String.format("%s, %s", usersString, users.get(i).name);
+			while (iter.hasNext() && deletingGroup != null) {
+				TreeNode group = iter.next();
+				if (group == deletingGroup) {
+					iter.remove();
+					deletingGroup = deletionIter.hasNext() ? deletionIter.next() : null;
 				}
-				LogUtil.i(this, "main=%s [%s] {%d}", usersGroup.mainUser.name, usersString, usersGroup.posAbsolute);
 			}
 		}
 	}
 
-	private void createOrRemoveUsersGroupsViews() {
-		int groupsCount = isGroupingEnabled ? usersGroups.size() : users.size(), childsCount = getChildCount();
+	private void breakGroups(int height) {
+		if (isGroupingEnabled) {
+			//dwa
+		}
+	}
+
+	private void createOrRemoveGroupsViews() {
+		// Create
+		int childsCount = getChildCount(), groupsCount = usersGroups.size();
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
 
+		// Remove
 		if (childsCount > groupsCount) {
 			removeViews(groupsCount, childsCount - groupsCount);
 		}
 	}
 
-	private void placeUsersGroupsViews() {
-		for (int i = 0; i < getChildCount(); ++i) {
-			UsersGroup usersGroup = null;
-			PosedUser user = null;
-			int viewPos;
-			if (isGroupingEnabled) {
-				usersGroup = usersGroups.get(getChildCount() - 1 - i); // HACK: find out why this cause correct z-ordering happen
-				viewPos = usersGroup.posAbsolute;
-			} else {
-				user = users.get(getChildCount() - 1 - i);
-				viewPos = user.pos.absolute;
-			}
+	private void updateGroupsViews() {
+		Assert.assertSame(getChildCount(), usersGroups.size());
+
+		for (int i = 0; i < usersGroups.size(); ++i) {
+			TreeNode group = usersGroups.get(i);
 
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
-			params.topMargin = viewPos;
+			params.topMargin = group.posAbsolute;
 			child.setLayoutParams(params);
 
-			if (isGroupingEnabled) {
-				Assert.assertNotNull(usersGroup);
-				if (usersGroup.users.size() > 1) {
-					child.setModel(usersGroup.mainUser, usersGroup.users, calcScoreByPos(getHeight(), usersGroup.posAbsolute));
-				} else {
-					child.setModel(usersGroup.mainUser);
-				}
+			if (group.isLeaf()) {
+				child.setModel(group.mainUser);
 			} else {
-				Assert.assertNotNull(user);
-				child.setModel(user, null, calcScoreByPos(getHeight(), user.pos.absolute));
+				child.setModel(group.mainUser, group.groupSize, calcScoreByRelativePos(group.posRelative));
 			}
 		}
 	}
@@ -186,9 +182,44 @@ public class UsersView extends FrameLayout {
 		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 	}
 
-	private float calcScoreByPos(int height, int absolutePosCentered) {
-		float absolutePos = absolutePosCentered + userViewHeightHalfPx;
-		float relativePos = (height - absolutePos) / height;
-		return (rank.scoreMax - rank.scoreMin) * relativePos + rank.scoreMin;
+	private float calcScoreByRelativePos(float relativePos) {
+		return (rank.scoreMax - rank.scoreMin) * (1 - relativePos) + rank.scoreMin;
+	}
+
+	class TreeNode implements Comparable<TreeNode> {
+		Float posRelative;
+		Integer posAbsolute;
+		TreeNode left, right;
+		int groupSize;
+
+		User mainUser;
+
+		public TreeNode(int height, TreeNode left, TreeNode right) {
+			this.left = left;
+			this.right = right;
+			mainUser = left.mainUser;
+			groupSize = left.groupSize + right.groupSize;
+			posRelative = (left.posAbsolute + right.posAbsolute + userViewHeightPx) / (2.0f * height);
+			updateAbsolutePos(height);
+		}
+
+		public TreeNode(Rank rank, User mainUser) {
+			this.mainUser = mainUser;
+			this.posRelative = (rank.scoreMax - mainUser.score) / (rank.scoreMax - rank.scoreMin);
+			groupSize = 1;
+		}
+
+		public void updateAbsolutePos(int height) {
+			posAbsolute = calcAbsolutePos(height, posRelative);
+		}
+
+		public boolean isLeaf() {
+			return left == null && right == null;
+		}
+
+		@Override
+		public int compareTo(TreeNode o) {
+			return Float.compare(posRelative, o.posRelative);
+		}
 	}
 }

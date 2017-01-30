@@ -31,11 +31,11 @@ public class RandomUtil {
 //			users.add(new User(GenerateName(), i * 5));
 //		}
 		//users.add(new User(GenerateName(), 31));
-		users.add(new User(GenerateName(), 50));
-		users.add(new User(GenerateName(), 53));
-		users.add(new User(GenerateName(), 56));
+		users.add(new User(GenerateName(), 15));
+		users.add(new User(GenerateName(), 25));
+		users.add(new User(GenerateName(), 40));
 		//users.add(new User(GenerateName(), 40.5f));
-		users.add(new User(GenerateName(), 60));
+		users.add(new User(GenerateName(), 45));
 		return users;
 	}
 }
