@@ -25,16 +25,14 @@ public class RandomUtil {
 	static public List<User> GenerateUsersList(@IntRange(from=0) int count) {
 		// FIXME: 26.01.2017 return real impl
 		List<User> users = new ArrayList<>(count);
-		count = 21;
-//		for (int i = 0; i < count; ++i) {
-//			//users.add(GenerateUser());
-//			users.add(new User(GenerateName(), i * 5));
-//		}
+		/*for (int i = 7; i <= 17; ++i) {
+			//users.add(GenerateUser());
+			users.add(new User(GenerateName(), i * 5));
+		}*/
 		//users.add(new User(GenerateName(), 31));
-		users.add(new User(GenerateName(), 15));
-		users.add(new User(GenerateName(), 25));
+//		users.add(new User(GenerateName(), 15));
+//		users.add(new User(GenerateName(), 25));
 		users.add(new User(GenerateName(), 40));
-		//users.add(new User(GenerateName(), 40.5f));
 		users.add(new User(GenerateName(), 50));
 		return users;
 	}

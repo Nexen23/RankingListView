@@ -130,14 +130,14 @@ public class UsersView extends FrameLayout {
 
 	private void breakGroups(int height) {
 		if (isGroupingEnabled) {
-			ListIterator<TreeNode> iter = usersGroups.listIterator(usersGroups.size());
+			ListIterator<TreeNode> iter = usersGroups.listIterator();
 			TreeNode node;
 			usersGroups = new LinkedList<>();
 			LinkedList<TreeNode> depthTraversalList = new LinkedList<>();
 
-			while (iter.hasPrevious()) {
+			while (iter.hasNext()) {
 				depthTraversalList.clear();
-				depthTraversalList.add(iter.previous());
+				depthTraversalList.add(iter.next());
 				while (!depthTraversalList.isEmpty()) {
 					node = depthTraversalList.getLast();
 					depthTraversalList.removeLast();
@@ -145,10 +145,10 @@ public class UsersView extends FrameLayout {
 					if (node.isLeaf() ||
 							node.right.calcAndGetAbsolutePos(height)
 									< (node.left.calcAndGetAbsolutePos(height) + userViewHeightPx)) {
-						usersGroups.addFirst(node);
+						usersGroups.add(node);
 					} else {
-						depthTraversalList.add(node.left);
 						depthTraversalList.add(node.right);
+						depthTraversalList.add(node.left);
 					}
 				}
 			}
