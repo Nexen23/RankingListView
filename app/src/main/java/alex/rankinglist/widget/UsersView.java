@@ -110,31 +110,21 @@ public class UsersView extends FrameLayout {
 
 	private void composeGroups(int height) {
 		if (isGroupingEnabled) {
-			List<TreeNode> groupsToDelete = new LinkedList<>();
 			ListIterator<TreeNode> iter = usersGroups.listIterator();
 			TreeNode prevGroup = iter.next(), curGroup;
+			usersGroups = new LinkedList<>();
 
 			while (iter.hasNext()) {
 				curGroup = iter.next();
 				if (prevGroup.posAbsolute + userViewHeightPx > curGroup.posAbsolute) {
-					TreeNode mergedGroups = new TreeNode(height, prevGroup, curGroup);
-					iter.set(mergedGroups);
-					groupsToDelete.add(prevGroup);
+					curGroup = new TreeNode(height, prevGroup, curGroup);
+				} else {
+					usersGroups.add(prevGroup);
 				}
 				prevGroup = curGroup;
 			}
 
-			iter = usersGroups.listIterator();
-			ListIterator<TreeNode> deletionIter = groupsToDelete.listIterator();
-			TreeNode deletingGroup = deletionIter.hasNext() ? deletionIter.next() : null;
-
-			while (iter.hasNext() && deletingGroup != null) {
-				TreeNode group = iter.next();
-				if (group == deletingGroup) {
-					iter.remove();
-					deletingGroup = deletionIter.hasNext() ? deletionIter.next() : null;
-				}
-			}
+			usersGroups.add(prevGroup);
 		}
 	}
 
