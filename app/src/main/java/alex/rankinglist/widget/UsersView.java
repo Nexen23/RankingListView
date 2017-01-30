@@ -25,7 +25,7 @@ public class UsersView extends FrameLayout {
 	float userViewHeightHalfPx;
 
 	private boolean isGroupingEnabled = true;
-	private List<TreeNode> usersGroups = new LinkedList<>();
+	private LinkedList<TreeNode> usersGroups = new LinkedList<>();
 	private Rank rank;
 
 	public UsersView(Context context) {
@@ -130,7 +130,28 @@ public class UsersView extends FrameLayout {
 
 	private void breakGroups(int height) {
 		if (isGroupingEnabled) {
-			//dwa
+			ListIterator<TreeNode> iter = usersGroups.listIterator(usersGroups.size());
+			TreeNode node;
+			usersGroups = new LinkedList<>();
+			LinkedList<TreeNode> depthTraversalList = new LinkedList<>();
+
+			while (iter.hasPrevious()) {
+				depthTraversalList.clear();
+				depthTraversalList.add(iter.previous());
+				while (!depthTraversalList.isEmpty()) {
+					node = depthTraversalList.getLast();
+					depthTraversalList.removeLast();
+
+					if (node.isLeaf() ||
+							node.right.calcAndGetAbsolutePos(height)
+									< (node.left.calcAndGetAbsolutePos(height) + userViewHeightPx)) {
+						usersGroups.addFirst(node);
+					} else {
+						depthTraversalList.add(node.left);
+						depthTraversalList.add(node.right);
+					}
+				}
+			}
 		}
 	}
 
@@ -201,6 +222,10 @@ public class UsersView extends FrameLayout {
 
 		public void updateAbsolutePos(int height) {
 			posAbsolute = calcAbsolutePos(height, posRelative);
+		}
+
+		public int calcAndGetAbsolutePos(int height) {
+			return posAbsolute = calcAbsolutePos(height, posRelative);
 		}
 
 		public boolean isLeaf() {

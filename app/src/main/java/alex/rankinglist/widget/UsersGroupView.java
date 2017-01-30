@@ -35,7 +35,7 @@ public class UsersGroupView extends FrameLayout {
 
 	public void setModel(User mainUser, int groupSize, float groupScore) {
 		binding.tvName.setText(mainUser.name);
-		binding.tvRank.setText(String.format("%.1f%%", groupScore));
+		binding.tvRank.setText(String.format("%.2f%%", groupScore));
 		if (groupSize > 1) {
 			binding.tvGroupSize.setVisibility(VISIBLE);
 			binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", groupSize)));
