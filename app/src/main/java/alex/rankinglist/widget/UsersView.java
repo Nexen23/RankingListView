@@ -93,7 +93,7 @@ public class UsersView extends FrameLayout {
 			updateGroupsViews();
 
 			for (TreeNode usersGroup : usersGroups) {
-				LogUtil.i(this, "main=%s [%d] {%d}", usersGroup.mainUser.name, usersGroup.groupSize, usersGroup.posAbsolute);
+				LogUtil.i(this, "main=%s [%d] {%f}", usersGroup.mainUser.name, usersGroup.groupSize, usersGroup.posAbsolute);
 			}
 
 			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
@@ -176,7 +176,7 @@ public class UsersView extends FrameLayout {
 
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
-			params.topMargin = group.posAbsolute;
+			params.topMargin = group.posAbsolute.intValue();
 			child.setLayoutParams(params);
 
 			if (group.isLeaf()) {
@@ -187,10 +187,10 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
-	private int calcAbsolutePos(int height, float relativePos) {
+	private float calcAbsolutePos(int height, float relativePos) {
 		float posFromTopPx = height * relativePos;
 		float centeredPosFromTopPx = posFromTopPx - userViewHeightHalfPx;
-		return (int) MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
+		return MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
 	}
 
 	private float calcScoreByRelativePos(float relativePos) {
@@ -199,7 +199,7 @@ public class UsersView extends FrameLayout {
 
 	class TreeNode implements Comparable<TreeNode> {
 		Float posRelative;
-		Integer posAbsolute;
+		Float posAbsolute;
 		TreeNode left, right;
 		int groupSize;
 
@@ -224,7 +224,7 @@ public class UsersView extends FrameLayout {
 			posAbsolute = calcAbsolutePos(height, posRelative);
 		}
 
-		public int calcAndGetAbsolutePos(int height) {
+		public Float calcAndGetAbsolutePos(int height) {
 			return posAbsolute = calcAbsolutePos(height, posRelative);
 		}
 

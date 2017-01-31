@@ -99,5 +99,6 @@ public class RankingView extends FrameLayout {
 		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
 		drawable.setCornerRadii(new float[] {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner});
 		binding.lScoresRuler.setBackground(drawable);
+		/*binding.lScoresRuler.setBackgroundColor(color);*/
 	}
 }
