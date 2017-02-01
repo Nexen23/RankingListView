@@ -1,7 +1,6 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -13,6 +12,7 @@ import java.util.List;
 import alex.rankinglist.R;
 import alex.rankinglist.databinding.WidgetRankingBinding;
 import alex.rankinglist.util.LogUtil;
+import alex.rankinglist.widget.drawable.CorneredColorDrawable;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.Ranking;
 import alex.rankinglist.widget.model.User;
@@ -40,7 +40,7 @@ public class RankingView extends FrameLayout {
 
 	void init() {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
-		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner);
+		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner_large);
 		spaceBetweenChilrenPx = getResources().getDimensionPixelSize(R.dimen.space_normal);
 		setMinimumHeight(binding.getRoot().getMinimumHeight());
 	}
@@ -94,11 +94,15 @@ public class RankingView extends FrameLayout {
 	}
 
 	private void setBackground(@ColorInt int color, boolean isBottomRank, boolean isTopRank) {
-		GradientDrawable drawable = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{color, color});
+//		GradientDrawable drawable = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{color, color});
+//		final int leftTopCorner = isTopRank ? cornerRadiusPx : 0;
+//		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
+//		drawable.setCornerRadii(new float[] {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner});
+//		binding.lScoresRuler.setBackground(drawable);
+
 		final int leftTopCorner = isTopRank ? cornerRadiusPx : 0;
 		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
-		drawable.setCornerRadii(new float[] {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner});
-		binding.lScoresRuler.setBackground(drawable);
-		/*binding.lScoresRuler.setBackgroundColor(color);*/
+		float[] radii = {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner};
+		binding.lScoresRuler.setBackground(new CorneredColorDrawable(color, radii));
 	}
 }
