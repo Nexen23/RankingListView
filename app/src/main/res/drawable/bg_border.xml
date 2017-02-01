@@ -3,14 +3,14 @@
 	<corners android:radius="@dimen/border_corner"/>
 
 	<padding
-		android:bottom="@dimen/border_size"
-		android:left="@dimen/border_size"
-		android:right="@dimen/border_size"
-		android:top="@dimen/border_size"/>
+		android:bottom="@dimen/border_size_normal"
+		android:left="@dimen/border_size_normal"
+		android:right="@dimen/border_size_normal"
+		android:top="@dimen/border_size_normal"/>
 
 	<solid android:color="@android:color/white" />
 
 	<stroke
 		android:color="@color/border"
-		android:width="@dimen/border_size"/>
+		android:width="@dimen/border_size_normal"/>
 </shape>

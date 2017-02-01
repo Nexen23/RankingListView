@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
 import alex.rankinglist.databinding.WidgetUserViewBinding;
-import alex.rankinglist.util.HtmlUtil;
 import alex.rankinglist.widget.model.User;
 
 
@@ -38,7 +37,8 @@ public class UsersGroupView extends FrameLayout {
 		binding.tvRank.setText(String.format("%.2f%%", groupScore));
 		if (groupSize > 1) {
 			binding.tvGroupSize.setVisibility(VISIBLE);
-			binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", groupSize)));
+			//binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", groupSize)));
+			binding.tvGroupSize.setText(String.format("+%d", groupSize));
 		} else {
 			binding.tvGroupSize.setVisibility(GONE);
 		}

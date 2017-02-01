@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:shape="oval">
+	<padding
+		android:bottom="@dimen/border_size_normal"
+		android:left="@dimen/border_size_normal"
+		android:right="@dimen/border_size_normal"
+		android:top="@dimen/border_size_normal"/>
+
+	<solid android:color="@color/group_size" />
+
+	<stroke
+		android:color="@color/group_size_border"
+		android:width="@dimen/border_size_small"/>
+
+	<size
+		android:width="@dimen/user_group_size_circle"
+		android:height="@dimen/user_group_size_circle"/>
+</shape>

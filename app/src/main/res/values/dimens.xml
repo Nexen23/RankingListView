@@ -8,10 +8,12 @@
 
 	<dimen name="rank_icon_size">64dp</dimen>
 	<dimen name="user_avatar_size">32dp</dimen>
-	<dimen name="border_size">2dp</dimen>
+	<dimen name="border_size_small">1dp</dimen>
+	<dimen name="border_size_normal">2dp</dimen>
 	<dimen name="border_corner">5dp</dimen>
 	<dimen name="border_corner_large">20dp</dimen>
 
+	<dimen name="user_group_size_circle">25dp</dimen>
 	<dimen name="user_view_height">35dp</dimen>
 	<dimen name="ranking_view_height_min">75dp</dimen>
 </resources>

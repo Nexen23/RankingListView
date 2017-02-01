@@ -43,11 +43,15 @@
 				tools:text="+23"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
+				android:maxLength="3"
+				android:maxLines="1"
 				android:id="@+id/tv_group_size"
 				android:textSize="12sp"
-				android:textColor="@android:color/holo_green_dark"
+				android:textColor="@android:color/white"
+				android:background="@drawable/bg_group_size"
 				android:layout_gravity="center_vertical"
-				android:paddingRight="@dimen/space_small"/>
+				android:gravity="center"
+				android:layout_marginRight="@dimen/space_small"/>
 
 			<TextView
 				tools:text="14%"
