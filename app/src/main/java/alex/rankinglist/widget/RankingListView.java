@@ -1,6 +1,7 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -45,6 +46,13 @@ public class RankingListView extends ScrollView {
 		setFillViewport(true);
 		binding = WidgetRankingListBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		scaleDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
+
+		// HACK: fix for flinches of first scale event (it ignores minSpan)
+		long time = SystemClock.uptimeMillis();
+		MotionEvent motionEvent = MotionEvent.obtain(time - 100, time, MotionEvent.ACTION_CANCEL,
+				0.0f, 0.0f, 0);
+		scaleDetector.onTouchEvent(motionEvent);
+		motionEvent.recycle();
 	}
 
 	private void fillRankingList(List<Ranking> rankings) {
@@ -128,7 +136,7 @@ public class RankingListView extends ScrollView {
 		ViewGroup.LayoutParams params = root.getLayoutParams();
 		float rootHeight = params.height > 0 ? params.height : root.getHeight();
 
-		float scaleFactor = 1 + (detectedScaleFactor - 1) * 3;
+		float scaleFactor = 1 + (detectedScaleFactor - 1) * 4;
 
 		float curScrollY = scrollNext == null ? getScrollY() : scrollNext;
 
