@@ -25,7 +25,9 @@ public class UsersView extends FrameLayout {
 	float userViewHeightHalfPx;
 
 	private boolean isGroupingEnabled = true;
-	private LinkedList<TreeNode> usersGroups = new LinkedList<>();
+	private TreeNode usersGroupsRoot;
+	int usersGroupsCount = 0;
+	LinkedList<DistanceNode> groupsDistances = new LinkedList<>();
 	private Rank rank;
 
 	public UsersView(Context context) {
@@ -69,32 +71,141 @@ public class UsersView extends FrameLayout {
 
 	public void setModel(Rank rank, List<User> users) {
 		this.rank = rank;
-		usersGroups.clear();
+		LinkedList<TreeNode> usersGroups = new LinkedList<>();
 		for (User user : users) {
 			usersGroups.add(new TreeNode(rank, user));
 		}
 		Collections.sort(usersGroups);
+		usersGroupsCount = usersGroups.size();
+
+		groupsDistances.clear();
+		ListIterator<TreeNode> iter = usersGroups.listIterator();
+		TreeNode prevNode = iter.next(), curNode;
+		usersGroupsRoot = prevNode;
+		while (iter.hasNext()) {
+			curNode = iter.next();
+			prevNode.next = curNode;
+			curNode.prev = prevNode;
+			groupsDistances.add(new DistanceNode(prevNode, curNode));
+			prevNode = curNode;
+		}
 	}
 
+
+	class DistanceNode implements Comparable<DistanceNode>,OnParentUpdate {
+		TreeNode from, to;
+		Float distance;
+
+		public DistanceNode(TreeNode from, TreeNode to) {
+			this.from = from;
+			this.to = to;
+			from.listeners.add(this);
+			to.listeners.add(this);
+		}
+		public void updateDistance() {
+			distance = to.posAbsolute - (from.posAbsolute + userViewHeightPx);
+		}
+
+		public void compose(int height) {
+			from.listeners.remove(this);
+			to.listeners.remove(this);
+			new TreeNode(height, from, to);
+			usersGroupsCount--;
+		}
+
+		@Override
+		public int compareTo(DistanceNode o) {
+			return Float.compare(distance, o.distance);
+		}
+
+		@Override
+		public void parentSetFor(TreeNode node, TreeNode parent) {
+			node.listeners.remove(this);
+			if (node == from) {
+				from = parent;
+				from.listeners.add(this);
+			} else {
+				to = parent;
+				to.listeners.add(this);
+			}
+			updateDistance();
+		}
+
+		@Override
+		public void parentClearedFor(TreeNode node) {
+			node.listeners.remove(this);
+			if (node == from) {
+				from = node.right;
+				from.listeners.add(this);
+			} else {
+				to = node.left;
+				to.listeners.add(this);
+			}
+			updateDistance();
+		}
+	}
+
+	private void updateGroupsPoses(int height) {
+		TreeNode node = usersGroupsRoot;
+		int i = 0;
+		while (node != null) {
+			node.updateAbsolutePos(height);
+			node = node.next;
+			++i;
+		}
+		Assert.assertSame(usersGroupsCount, i);
+	}
+
+	private void updateDistances() {
+		for (DistanceNode node : groupsDistances) {
+			node.updateDistance();
+		}
+		Collections.sort(groupsDistances);
+	}
+
+	private void composeByDistances(int height) {
+		if (!groupsDistances.isEmpty()) {
+			DistanceNode first = groupsDistances.getFirst();
+			while (first.distance < 0) {
+				first.compose(height);
+				groupsDistances.removeFirst();
+				Collections.sort(groupsDistances);
+				if (groupsDistances.isEmpty()) {
+					break;
+				} else {
+					first = groupsDistances.getFirst();
+				}
+			}
+		}
+	}
+
+
+
+
+
+
+
 	private void updateChilds(int width, int height) {
-		if (!usersGroups.isEmpty()) {
+		if (usersGroupsCount > 0) {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
+			updateGroupsPoses(height);
+			updateDistances();
 			if (prevHeight == null || prevHeight > height) {
-				updateGroupsPoses(height);
-				composeGroups(height);
+				composeByDistances(height);
+//				composeGroups(height);
 			} else {
-				breakGroups(height);
-				updateGroupsPoses(height);
+//				breakGroups(height);
+//				updateGroupsPoses(height);
 			}
 			prevHeight = height;
 
 			createOrRemoveGroupsViews();
 			updateGroupsViews();
 
-			for (TreeNode usersGroup : usersGroups) {
+			/*for (TreeNode usersGroup : usersGroups) {
 				LogUtil.i(this, "main=%s [%d] {%f}", usersGroup.mainUser.name, usersGroup.groupSize, usersGroup.posAbsolute);
-			}
+			}*/
 
 			int widthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
 			int heightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
@@ -102,13 +213,7 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
-	private void updateGroupsPoses(int height) {
-		for (TreeNode group : usersGroups) {
-			group.updateAbsolutePos(height);
-		}
-	}
-
-	private void composeGroups(int height) {
+	/*private void composeGroups(int height) {
 		if (isGroupingEnabled) {
 			ListIterator<TreeNode> iter = usersGroups.listIterator();
 			TreeNode prevGroup = iter.next(), curGroup;
@@ -153,11 +258,11 @@ public class UsersView extends FrameLayout {
 				}
 			}
 		}
-	}
+	}*/
 
 	private void createOrRemoveGroupsViews() {
 		// Create
-		int childsCount = getChildCount(), groupsCount = usersGroups.size();
+		int childsCount = getChildCount(), groupsCount = usersGroupsCount;
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
@@ -169,11 +274,10 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void updateGroupsViews() {
-		Assert.assertSame(getChildCount(), usersGroups.size());
+		Assert.assertSame(getChildCount(), usersGroupsCount);
 
-		for (int i = 0; i < usersGroups.size(); ++i) {
-			TreeNode group = usersGroups.get(i);
-
+		TreeNode group = usersGroupsRoot;
+		for (int i = 0; i < usersGroupsCount; ++i) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 			params.topMargin = group.posAbsolute.intValue();
@@ -184,6 +288,8 @@ public class UsersView extends FrameLayout {
 			} else {
 				child.setModel(group.mainUser, group.groupSize, calcScoreByRelativePos(group.posRelative));
 			}
+
+			group = group.next;
 		}
 	}
 
@@ -197,6 +303,14 @@ public class UsersView extends FrameLayout {
 		return (rank.scoreMax - rank.scoreMin) * (1 - relativePos) + rank.scoreMin;
 	}
 
+
+
+
+	interface OnParentUpdate {
+		void parentSetFor(TreeNode node, TreeNode parent);
+		void parentClearedFor(TreeNode node);
+	}
+
 	class TreeNode implements Comparable<TreeNode> {
 		Float posRelative;
 		Float posAbsolute;
@@ -205,13 +319,47 @@ public class UsersView extends FrameLayout {
 
 		User mainUser;
 
+
+		TreeNode prev, next; // for lists moving and updating
+		LinkedList<OnParentUpdate> listeners = new LinkedList<>();
+
 		public TreeNode(int height, TreeNode left, TreeNode right) {
 			this.left = left;
 			this.right = right;
+
+			if (left.prev != null) {
+				left.prev.next = this;
+			}
+			prev = left.prev;
+
+			if (right.next != null) {
+				right.next.prev = this;
+			}
+			next = right.next;
+
+			if (left == usersGroupsRoot) {
+				usersGroupsRoot = this;
+			}
+
 			mainUser = left.mainUser;
 			groupSize = left.groupSize + right.groupSize;
 			posRelative = (left.posAbsolute + right.posAbsolute + userViewHeightPx) / (2.0f * height);
 			updateAbsolutePos(height);
+
+			left.setParent(this);
+			right.setParent(this);
+		}
+
+		void setParent(TreeNode parent) {
+			for (OnParentUpdate listener : listeners) {
+				listener.parentSetFor(this, parent);
+			}
+		}
+
+		void clearParent() {
+			for (OnParentUpdate listener : listeners) {
+				listener.parentClearedFor(this);
+			}
 		}
 
 		public TreeNode(Rank rank, User mainUser) {
