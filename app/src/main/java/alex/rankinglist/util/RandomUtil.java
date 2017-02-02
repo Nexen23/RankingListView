@@ -30,9 +30,9 @@ public class RandomUtil {
 			users.add(new User(GenerateName(), i * 5));
 		}
 
-		users.add(new User(GenerateName(), 1));
-		users.add(new User(GenerateName(), 10));
-		users.add(new User(GenerateName(), 17));
+//		users.add(new User(GenerateName(), 1));
+//		users.add(new User(GenerateName(), 10));
+//		users.add(new User(GenerateName(), 17));
 
 //		users.add(new User(GenerateName(), 1));
 //		users.add(new User(GenerateName(), 20));

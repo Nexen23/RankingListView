@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Stack;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
@@ -28,6 +29,7 @@ public class UsersView extends FrameLayout {
 	private TreeNode usersGroupsRoot;
 	int usersGroupsCount = 0;
 	LinkedList<DistanceNode> groupsDistances = new LinkedList<>();
+	Stack<TreeNode> groupsHistory = new Stack<>();
 	private Rank rank;
 
 	public UsersView(Context context) {
@@ -109,7 +111,7 @@ public class UsersView extends FrameLayout {
 		public void compose(int height) {
 			from.listeners.remove(this);
 			to.listeners.remove(this);
-			new TreeNode(height, from, to);
+			groupsHistory.push(new TreeNode(height, from, to));
 			usersGroupsCount--;
 		}
 
@@ -132,7 +134,7 @@ public class UsersView extends FrameLayout {
 		}
 
 		@Override
-		public void parentClearedFor(TreeNode node) {
+		public void breakNode(TreeNode node) {
 			node.listeners.remove(this);
 			if (node == from) {
 				from = node.right;
@@ -179,6 +181,33 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
+	private void breakByHistory(int height) {
+		while (!groupsHistory.isEmpty()) {
+			TreeNode node = groupsHistory.peek();
+			Float rightPos = node.right.calcAndGetAbsolutePos(height);
+			Float leftPos = node.left.calcAndGetAbsolutePos(height);
+			if (rightPos >= (leftPos + userViewHeightPx)) {
+				groupsHistory.pop();
+
+				node.breakNode();
+
+				if (node.prev != null) {
+					node.prev.next = node.left;
+				}
+				if (node.next != null) {
+					node.next.prev = node.right;
+				}
+				if (node == usersGroupsRoot) {
+					usersGroupsRoot = node.left;
+				}
+
+				groupsDistances.add(new DistanceNode(node.left, node.right));
+				++usersGroupsCount;
+			} else {
+				break;
+			}
+		}
+	}
 
 
 
@@ -190,13 +219,11 @@ public class UsersView extends FrameLayout {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
 			updateGroupsPoses(height);
-			updateDistances();
 			if (prevHeight == null || prevHeight > height) {
+				updateDistances();
 				composeByDistances(height);
-//				composeGroups(height);
 			} else {
-//				breakGroups(height);
-//				updateGroupsPoses(height);
+				breakByHistory(height);
 			}
 			prevHeight = height;
 
@@ -212,53 +239,6 @@ public class UsersView extends FrameLayout {
 			measureChildren(widthSpec, heightSpec);
 		}
 	}
-
-	/*private void composeGroups(int height) {
-		if (isGroupingEnabled) {
-			ListIterator<TreeNode> iter = usersGroups.listIterator();
-			TreeNode prevGroup = iter.next(), curGroup;
-			usersGroups = new LinkedList<>();
-
-			while (iter.hasNext()) {
-				curGroup = iter.next();
-				if (prevGroup.posAbsolute + userViewHeightPx > curGroup.posAbsolute) {
-					curGroup = new TreeNode(height, prevGroup, curGroup);
-				} else {
-					usersGroups.add(prevGroup);
-				}
-				prevGroup = curGroup;
-			}
-
-			usersGroups.add(prevGroup);
-		}
-	}
-
-	private void breakGroups(int height) {
-		if (isGroupingEnabled) {
-			ListIterator<TreeNode> iter = usersGroups.listIterator();
-			TreeNode node;
-			usersGroups = new LinkedList<>();
-			LinkedList<TreeNode> depthTraversalList = new LinkedList<>();
-
-			while (iter.hasNext()) {
-				depthTraversalList.clear();
-				depthTraversalList.add(iter.next());
-				while (!depthTraversalList.isEmpty()) {
-					node = depthTraversalList.getLast();
-					depthTraversalList.removeLast();
-
-					if (node.isLeaf() ||
-							node.right.calcAndGetAbsolutePos(height)
-									< (node.left.calcAndGetAbsolutePos(height) + userViewHeightPx)) {
-						usersGroups.add(node);
-					} else {
-						depthTraversalList.add(node.right);
-						depthTraversalList.add(node.left);
-					}
-				}
-			}
-		}
-	}*/
 
 	private void createOrRemoveGroupsViews() {
 		// Create
@@ -308,7 +288,7 @@ public class UsersView extends FrameLayout {
 
 	interface OnParentUpdate {
 		void parentSetFor(TreeNode node, TreeNode parent);
-		void parentClearedFor(TreeNode node);
+		void breakNode(TreeNode node);
 	}
 
 	class TreeNode implements Comparable<TreeNode> {
@@ -351,14 +331,16 @@ public class UsersView extends FrameLayout {
 		}
 
 		void setParent(TreeNode parent) {
-			for (OnParentUpdate listener : listeners) {
+			LinkedList<OnParentUpdate> listenersClone = new LinkedList<>(listeners);
+			for (OnParentUpdate listener : listenersClone) {
 				listener.parentSetFor(this, parent);
 			}
 		}
 
-		void clearParent() {
-			for (OnParentUpdate listener : listeners) {
-				listener.parentClearedFor(this);
+		void breakNode() {
+			LinkedList<OnParentUpdate> listenersClone = new LinkedList<>(listeners);
+			for (OnParentUpdate listener : listenersClone) {
+				listener.breakNode(this);
 			}
 		}
 
