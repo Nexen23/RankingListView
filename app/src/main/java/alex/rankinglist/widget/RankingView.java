@@ -1,7 +1,6 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
-import android.graphics.drawable.PaintDrawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -13,6 +12,7 @@ import java.util.List;
 import alex.rankinglist.R;
 import alex.rankinglist.databinding.WidgetRankingBinding;
 import alex.rankinglist.util.LogUtil;
+import alex.rankinglist.widget.drawable.CorneredColorDrawable;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.Ranking;
 import alex.rankinglist.widget.model.User;
@@ -98,8 +98,9 @@ public class RankingView extends FrameLayout {
 		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
 		float[] radii = {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner};
 
-		PaintDrawable pd = new PaintDrawable(color);
-		pd.setCornerRadii(radii);
-		binding.lScoresRuler.setBackground(pd);
+		/*PaintDrawable drawable = new PaintDrawable(color);
+		drawable.setCornerRadii(radii);*/
+		CorneredColorDrawable drawable = new CorneredColorDrawable(color, radii);
+		binding.lScoresRuler.setBackground(drawable);
 	}
 }
