@@ -12,9 +12,11 @@ import alex.rankinglist.widget.model.User;
 
 public class RandomUtil {
 	static private Random random = new Random();
+	static int x = 0;
 
 	static public String GenerateName() {
-		return Integer.toHexString(random.nextInt(0xFFFFFF));
+		//return Integer.toHexString(random.nextInt(0xFFFFFF));
+		return Integer.toHexString(x++);
 	}
 
 	static public User GenerateUser() {

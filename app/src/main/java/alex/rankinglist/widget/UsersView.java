@@ -116,11 +116,6 @@ public class UsersView extends FrameLayout {
 		}
 
 		@Override
-		public int compareTo(DistanceNode o) {
-			return Float.compare(distance, o.distance);
-		}
-
-		@Override
 		public void parentSetFor(TreeNode node, TreeNode parent) {
 			node.listeners.remove(this);
 			if (node == from) {
@@ -145,6 +140,17 @@ public class UsersView extends FrameLayout {
 			}
 			updateDistance();
 		}
+
+		@Override
+		public int compareTo(DistanceNode o) {
+			int comparisonResult = MathUtil.Compare(distance, o.distance);
+			if (comparisonResult == 0) {
+				int i = from.mainUser.name.compareTo(o.from.mainUser.name);
+				return i;
+			} else {
+				return comparisonResult;
+			}
+		}
 	}
 
 	private void updateGroupsPoses(int height) {
@@ -165,10 +171,36 @@ public class UsersView extends FrameLayout {
 		Collections.sort(groupsDistances);
 	}
 
+	boolean logged = false;
+	private void logDistances() {
+		/*String str = String.format("%d = [ ", groupsDistances.size());
+		for (DistanceNode node : groupsDistances) {
+			str = String.format("%s(%.5f: %s--%s) ", str, node.distance, node.from.mainUser.name, node.to.mainUser.name);
+		}
+		LogUtil.i(this, "%s]", str);
+
+		str = String.format("%d = [ ", groupsDistances.size() - 1);
+		ListIterator<DistanceNode> iter = groupsDistances.listIterator();
+		DistanceNode prev = iter.next(), cur;
+		while (iter.hasNext()) {
+			cur = iter.next();
+			str = String.format("%s(%d: %s--%s <> %s--%s) ", str, prev.compareTo(cur),
+					prev.from.mainUser.name, prev.to.mainUser.name,
+					cur.from.mainUser.name, cur.to.mainUser.name);
+			prev = cur;
+		}
+		LogUtil.log(this, "%s]", str);*/
+	}
+
 	private void composeByDistances(int height) {
+		logged = false;
 		if (!groupsDistances.isEmpty()) {
 			DistanceNode first = groupsDistances.getFirst();
 			while (first.distance < 0) {
+				if (!logged) {
+					logged = true;
+					logDistances();
+				}
 				first.compose(height);
 				groupsDistances.removeFirst();
 				Collections.sort(groupsDistances);
