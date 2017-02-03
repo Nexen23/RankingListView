@@ -291,9 +291,10 @@ public class UsersView extends FrameLayout {
 		TreeNode group = usersGroupsRoot;
 		for (int i = 0; i < usersGroupsCount; ++i) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
-			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
-			params.topMargin = group.posAbsolute.intValue();
-			child.setLayoutParams(params);
+//			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
+//			params.topMargin = group.posAbsolute.intValue();
+//			child.setLayoutParams(params);
+			child.setY(group.posAbsolute.intValue());
 
 			if (group.isLeaf()) {
 				child.setModel(group.mainUser);
