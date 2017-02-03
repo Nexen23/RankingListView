@@ -5,7 +5,9 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import java.util.List;
 
@@ -49,6 +51,9 @@ public class RankingView extends FrameLayout {
 		this.sharedHeight = imaginaryHeight;
 	}
 
+	int t = 200;
+	boolean shouldHideIcon = false;
+
 	@Override
 	protected void onSizeChanged(int width, int height, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
@@ -58,10 +63,30 @@ public class RankingView extends FrameLayout {
 		boolean shouldHideIcon = requiredHeight > sharedHeight;
 		LogUtil.i(this, "onSizeChanged: requiredHeight=%d :: realHeight=%d <shared=%d> :: shouldHideIcon=%s",
 				requiredHeight, height, sharedHeight, shouldHideIcon);
-		if (shouldHideIcon) {
-			binding.ivRank.setVisibility(GONE);
-		} else {
-			binding.ivRank.setVisibility(VISIBLE);
+
+		if (this.shouldHideIcon != shouldHideIcon) {
+			final ImageView logoView = binding.ivRank;
+			final float curAlpha = logoView.getAlpha();
+			if (shouldHideIcon) {
+				final float realDuration = curAlpha * t;
+				logoView.animate()
+						.alpha(0.0f)
+						.setDuration((long) realDuration)
+						.setInterpolator(new LinearInterpolator())
+						.withEndAction(new Runnable() {
+							@Override
+							public void run() {
+								logoView.setVisibility(GONE);
+							}
+						});
+			} else {
+				final float realDuration = (1 - curAlpha) * t;
+				logoView.setVisibility(VISIBLE);
+				logoView.animate()
+						.alpha(1.0f)
+						.setDuration((long) realDuration);
+			}
+			this.shouldHideIcon = shouldHideIcon;
 		}
 	}
 
@@ -86,8 +111,35 @@ public class RankingView extends FrameLayout {
 		binding.vUsers.setModel(rank, users);
 	}
 
+
 	private void setRank(Rank rank) {
 		binding.ivRank.setImageResource(rank.iconResId);
+
+//		postDelayed(new Runnable() {
+//			@Override
+//			public void run() {
+//				binding.ivRank.animate().setInterpolator(new LinearInterpolator());
+//
+//				final float x = binding.ivRank.getX();
+//				final float delta = 300;
+//				binding.ivRank.animate().xBy(delta).setDuration(t).start();
+//				postDelayed(new Runnable() {
+//					@Override
+//					public void run() {
+//						binding.ivRank.animate().cancel();
+//
+//						float xcur = binding.ivRank.getX();
+//						float coef = 1 - (xcur - x) / delta;
+//						int dur = (int) (coef * t);
+//						binding.ivRank.animate()
+//								.x(x)
+//								.setDuration(dur)
+//								.start();
+//					}
+//				}, t/2);
+//			}
+//		}, 500);
+
 		binding.tvTitle.setText(rank.name);
 		binding.tvScore.setText(String.format("%s%%", String.valueOf(rank.scoreMax)));
 		setBackground(rank.backgroundColor, rank.scoreMin == 0, rank.scoreMax == 100);
