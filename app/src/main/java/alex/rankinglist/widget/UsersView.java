@@ -73,25 +73,31 @@ public class UsersView extends FrameLayout {
 
 	public void setModel(Rank rank, List<User> users) {
 		this.rank = rank;
-		LinkedList<TreeNode> usersGroups = new LinkedList<>();
-		for (User user : users) {
-			usersGroups.add(new TreeNode(rank, user));
-		}
-		Collections.sort(usersGroups);
-		usersGroupsCount = usersGroups.size();
+		if (!users.isEmpty()) {
+			LinkedList<TreeNode> usersGroups = new LinkedList<>();
+			for (User user : users) {
+				usersGroups.add(new TreeNode(rank, user));
+			}
+			Collections.sort(usersGroups);
+			usersGroupsCount = usersGroups.size();
 
-		groupsDistances.clear();
-		ListIterator<TreeNode> iter = usersGroups.listIterator();
-		TreeNode prevNode = iter.next(), curNode;
-		usersGroupsRoot = prevNode;
-		while (iter.hasNext()) {
-			curNode = iter.next();
-			prevNode.next = curNode;
-			curNode.prev = prevNode;
-			groupsDistances.add(new DistanceNode(prevNode, curNode));
-			prevNode = curNode;
+			groupsDistances.clear();
+			ListIterator<TreeNode> iter = usersGroups.listIterator();
+			TreeNode prevNode = iter.next(), curNode;
+			usersGroupsRoot = prevNode;
+			while (iter.hasNext()) {
+				curNode = iter.next();
+				prevNode.next = curNode;
+				curNode.prev = prevNode;
+				groupsDistances.add(new DistanceNode(prevNode, curNode));
+				prevNode = curNode;
+			}
 		}
 	}
+
+
+
+
 
 
 	class DistanceNode implements Comparable<DistanceNode>,OnParentUpdate {
@@ -143,15 +149,24 @@ public class UsersView extends FrameLayout {
 
 		@Override
 		public int compareTo(DistanceNode o) {
-			int comparisonResult = MathUtil.Compare(to.posRelative - from.posRelative, o.to.posRelative - o.from.posRelative);
-			if (comparisonResult == 0) {
-				int i = from.mainUser.name.compareTo(o.from.mainUser.name);
-				return i;
+			final int distancesComparison = MathUtil.Compare(distance, o.distance);
+			if (distancesComparison != 0) {
+				return distancesComparison;
 			} else {
-				return comparisonResult;
+				final int relativePosesComparison =
+						MathUtil.Compare(to.posRelative - from.posRelative, o.to.posRelative - o.from.posRelative);
+				if (relativePosesComparison != 0) {
+					return relativePosesComparison;
+ 				} else {
+					final int namesComparison = from.mainUser.name.compareTo(o.from.mainUser.name);
+					return namesComparison;
+				}
 			}
 		}
 	}
+
+
+
 
 	private void updateGroupsPoses(int height) {
 		TreeNode node = usersGroupsRoot;

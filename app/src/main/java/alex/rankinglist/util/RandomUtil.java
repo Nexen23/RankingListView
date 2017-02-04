@@ -27,7 +27,7 @@ public class RandomUtil {
 	static public List<User> GenerateUsersList(@IntRange(from=0) int count) {
 		// FIXME: 26.01.2017 return real impl
 		List<User> users = new ArrayList<>(count);
-		for (int i = 7; i <= 17; ++i) {
+		for (int i = 0; i <= 20; ++i) {
 			//users.add(GenerateUser());
 			users.add(new User(GenerateName(), i * 5));
 		}
@@ -41,7 +41,8 @@ public class RandomUtil {
 //		users.add(new User(GenerateName(), 47));
 
 //		users.add(new User(GenerateName(), 80));
-//		users.add(new User(GenerateName(), 95));
+//		users.add(new User(GenerateName(), 85));
+//		users.add(new User(GenerateName(), 75));
 		return users;
 	}
 }
