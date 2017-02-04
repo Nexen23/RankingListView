@@ -186,15 +186,53 @@ public class UsersView extends FrameLayout {
 		Collections.sort(groupsDistances);
 	}
 
+	void innerLog(StringBuilder b, TreeNode node, boolean isLeft) {
+		if (node.left != null) {
+			b.append('{');
+			innerLog(b, node.left, true);
+			b.append(", ");
+			innerLog(b, node.right, false);
+			b.append('}');
+		} else {
+			b.append(String.format("%s", node.mainUser.name));
+		}
+	}
+
+	void logGroups() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(String.format("%d = [", usersGroupsCount));
+
+		TreeNode node = usersGroupsRoot;
+		while (node != null) {
+			innerLog(builder, node, false);
+			if (node.next != null) {
+				builder.append(" + ");
+			}
+			node = node.next;
+		}
+
+		builder.append("]");
+
+		LogUtil.i(this, builder.toString());
+	}
+
 	boolean logged = false;
 	private void logDistances() {
-		/*String str = String.format("%d = [ ", groupsDistances.size());
+		String str = String.format("%d = [ ", groupsDistances.size());
 		for (DistanceNode node : groupsDistances) {
 			str = String.format("%s(%.5f: %s--%s) ", str, node.distance, node.from.mainUser.name, node.to.mainUser.name);
 		}
 		LogUtil.i(this, "%s]", str);
 
-		str = String.format("%d = [ ", groupsDistances.size() - 1);
+		str = String.format("^ %d = [ ", usersGroupsCount);
+		TreeNode node = usersGroupsRoot;
+		while (node != null) {
+			str = String.format("%s(%s: %.5f) ", str, node.mainUser.name, node.posAbsolute);
+			node = node.next;
+		}
+		LogUtil.log(this, "%s]", str);
+
+		/*str = String.format("^ %d = [ ", groupsDistances.size() - 1);
 		ListIterator<DistanceNode> iter = groupsDistances.listIterator();
 		DistanceNode prev = iter.next(), cur;
 		while (iter.hasNext()) {
@@ -213,8 +251,8 @@ public class UsersView extends FrameLayout {
 			DistanceNode first = groupsDistances.getFirst();
 			while (first.distance < 0) {
 				if (!logged) {
-					logged = true;
-					logDistances();
+					//logged = true;
+					//logDistances();
 				}
 				first.compose(height);
 				groupsDistances.removeFirst();
@@ -226,6 +264,7 @@ public class UsersView extends FrameLayout {
 				}
 			}
 		}
+		//logDistances();
 	}
 
 	private void breakByHistory(int height) {
@@ -265,6 +304,8 @@ public class UsersView extends FrameLayout {
 		if (usersGroupsCount > 0) {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
+			LogUtil.err(this, "----------- = [ %d ---------------", height);
+			logGroups();
 			updateGroupsPoses(height);
 			if (prevHeight == null || prevHeight > height) {
 				updateDistances();
@@ -276,6 +317,7 @@ public class UsersView extends FrameLayout {
 
 			createOrRemoveGroupsViews();
 			updateGroupsViews();
+			logGroups();
 
 			/*for (TreeNode usersGroup : usersGroups) {
 				LogUtil.i(this, "main=%s [%d] {%f}", usersGroup.mainUser.name, usersGroup.groupSize, usersGroup.posAbsolute);
