@@ -143,7 +143,7 @@ public class UsersView extends FrameLayout {
 
 		@Override
 		public int compareTo(DistanceNode o) {
-			int comparisonResult = MathUtil.Compare(distance, o.distance);
+			int comparisonResult = MathUtil.Compare(to.posRelative - from.posRelative, o.to.posRelative - o.from.posRelative);
 			if (comparisonResult == 0) {
 				int i = from.mainUser.name.compareTo(o.from.mainUser.name);
 				return i;
@@ -420,9 +420,9 @@ public class UsersView extends FrameLayout {
 
 			setRelativePos(now);
 
-			if (!MathUtil.IsEqual(prev, now)) {
+			/*if (!MathUtil.IsEqual(prev, now)) {
 				LogUtil.err(this, "%.4f(real) != %.4f(best)", prev, now);
-			}
+			}*/
 			//Assert.assertEquals(posRelative, test, MathUtil.EPSILON);
 		}
 
