@@ -100,9 +100,9 @@ public class UsersView extends FrameLayout {
 
 
 
-	class DistanceNode implements Comparable<DistanceNode>,OnParentUpdate {
+	public class DistanceNode implements Comparable<DistanceNode>,OnParentUpdate {
 		TreeNode from, to;
-		Float distance;
+		Float intersectingHeight;
 
 		public DistanceNode(TreeNode from, TreeNode to) {
 			this.from = from;
@@ -110,9 +110,45 @@ public class UsersView extends FrameLayout {
 			from.listeners.add(this);
 			to.listeners.add(this);
 		}
-		public void updateDistance() {
-			distance = to.posAbsolute - (from.posAbsolute + userViewHeightPx);
+
+		public void updateIntersectingHeight() {
+			//distance = to.posAbsolute - (from.posAbsolute + userViewHeightPx);
+
+			TreeNode left = from, right = to;
+
+			// FIXME: 04.02.2017 relativePoses can be equal
+			final Float wouldIntersectWhenHeight = (userViewHeightPx / (right.posRelative - left.posRelative));
+			final Float height = wouldIntersectWhenHeight;
+			final boolean leftIsBorder = left.isLeftBorder(height), rightIsBorder = right.isRightBorder(height);
+
+			while (true) {
+				if (!leftIsBorder && !rightIsBorder) { // general intersect of non borders
+					intersectingHeight = height;
+					break;
+				}
+
+				if (leftIsBorder && !rightIsBorder) {
+					// FIXME: 04.02.2017 relativePos can be 0
+					intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / right.posRelative;
+					break;
+				}
+
+				if (!leftIsBorder && rightIsBorder) {
+					// FIXME: 04.02.2017 relativePos can be 1
+					intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / (1 - left.posRelative);
+					break;
+				}
+
+				if (leftIsBorder && rightIsBorder) {
+					intersectingHeight = userViewHeightPx * 2.0f;
+					break;
+				}
+				throw new IllegalStateException();
+			}
 		}
+
+
+
 
 		public void compose(int height) {
 			from.listeners.remove(this);
@@ -131,7 +167,7 @@ public class UsersView extends FrameLayout {
 				to = parent;
 				to.listeners.add(this);
 			}
-			updateDistance();
+			updateIntersectingHeight();
 		}
 
 		@Override
@@ -144,21 +180,22 @@ public class UsersView extends FrameLayout {
 				to = node.left;
 				to.listeners.add(this);
 			}
-			updateDistance();
+			updateIntersectingHeight();
 		}
 
 		@Override
 		public int compareTo(DistanceNode o) {
-			final int distancesComparison = MathUtil.Compare(distance, o.distance);
-			if (distancesComparison != 0) {
-				return distancesComparison;
+			DistanceNode a = this, b = o;
+			final int heightsComparison = MathUtil.Compare(b.intersectingHeight, a.intersectingHeight);
+			if (heightsComparison != 0) {
+				return heightsComparison;
 			} else {
 				final int relativePosesComparison =
-						MathUtil.Compare(to.posRelative - from.posRelative, o.to.posRelative - o.from.posRelative);
+						MathUtil.Compare(a.to.posRelative - a.from.posRelative, b.to.posRelative - b.from.posRelative);
 				if (relativePosesComparison != 0) {
 					return relativePosesComparison;
  				} else {
-					final int namesComparison = from.mainUser.name.compareTo(o.from.mainUser.name);
+					final int namesComparison = a.from.mainUser.name.compareTo(b.from.mainUser.name);
 					return namesComparison;
 				}
 			}
@@ -181,7 +218,7 @@ public class UsersView extends FrameLayout {
 
 	private void updateDistances() {
 		for (DistanceNode node : groupsDistances) {
-			node.updateDistance();
+			node.updateIntersectingHeight();
 		}
 		Collections.sort(groupsDistances);
 	}
@@ -218,19 +255,19 @@ public class UsersView extends FrameLayout {
 
 	boolean logged = false;
 	private void logDistances() {
-		String str = String.format("%d = [ ", groupsDistances.size());
-		for (DistanceNode node : groupsDistances) {
-			str = String.format("%s(%.5f: %s--%s) ", str, node.distance, node.from.mainUser.name, node.to.mainUser.name);
-		}
-		LogUtil.i(this, "%s]", str);
-
-		str = String.format("^ %d = [ ", usersGroupsCount);
-		TreeNode node = usersGroupsRoot;
-		while (node != null) {
-			str = String.format("%s(%s: %.5f) ", str, node.mainUser.name, node.posAbsolute);
-			node = node.next;
-		}
-		LogUtil.log(this, "%s]", str);
+//		String str = String.format("%d = [ ", groupsDistances.size());
+//		for (DistanceNode node : groupsDistances) {
+//			str = String.format("%s(%.5f: %s--%s) ", str, node.distance, node.from.mainUser.name, node.to.mainUser.name);
+//		}
+//		LogUtil.i(this, "%s]", str);
+//
+//		str = String.format("^ %d = [ ", usersGroupsCount);
+//		TreeNode node = usersGroupsRoot;
+//		while (node != null) {
+//			str = String.format("%s(%s: %.5f) ", str, node.mainUser.name, node.posAbsolute);
+//			node = node.next;
+//		}
+//		LogUtil.log(this, "%s]", str);
 
 		/*str = String.format("^ %d = [ ", groupsDistances.size() - 1);
 		ListIterator<DistanceNode> iter = groupsDistances.listIterator();
@@ -249,7 +286,7 @@ public class UsersView extends FrameLayout {
 		logged = false;
 		if (!groupsDistances.isEmpty()) {
 			DistanceNode first = groupsDistances.getFirst();
-			while (first.distance < 0) {
+			while (first.intersectingHeight >= height) {
 				if (!logged) {
 					//logged = true;
 					//logDistances();
@@ -381,12 +418,12 @@ public class UsersView extends FrameLayout {
 		void breakNode(TreeNode node);
 	}
 
-	class TreeNode implements Comparable<TreeNode> {
+	public class TreeNode implements Comparable<TreeNode> {
 		Float posRelative;
 		Float posAbsolute;
 		TreeNode left, right;
 		int groupSize;
-		int heightToLeftBorder, heightToRightBorder;
+		Float heightToLeftBorder, heightToRightBorder;
 
 		User mainUser;
 
@@ -415,7 +452,8 @@ public class UsersView extends FrameLayout {
 			mainUser = left.mainUser;
 			groupSize = left.groupSize + right.groupSize;
 
-			final boolean leftIsBorder = left.isLeftBorder(height), rightIsBorder = right.isRightBorder(height);
+			final boolean leftIsBorder = left.isLeftBorder((float) height),
+					rightIsBorder = right.isRightBorder((float) height);
 			// FIXME: 04.02.2017 relativePoses can be equal
 			final int wouldIntersectWhenHeight = (int) (userViewHeightPx / (right.posRelative - left.posRelative));
 
@@ -472,7 +510,7 @@ public class UsersView extends FrameLayout {
 		}
 
 		void intersectNoBorders(int height) {
-			final float prev = (left.posAbsolute + right.posAbsolute + userViewHeightPx) / (2.0f * height);
+			//final float prev = (left.posAbsolute + right.posAbsolute + userViewHeightPx) / (2.0f * height);
 			float now = (right.posRelative + left.posRelative) / 2;
 
 			setRelativePos(now);
@@ -527,16 +565,16 @@ public class UsersView extends FrameLayout {
 
 		public void setRelativePos(float relative) {
 			// FIXME: 04.02.2017 relative can be 0 or 1
-			heightToLeftBorder = (int) (userViewHeightHalfPx / relative);
-			heightToRightBorder = (int) (userViewHeightHalfPx / (1 - relative));
+			heightToLeftBorder = userViewHeightHalfPx / relative;
+			heightToRightBorder = userViewHeightHalfPx / (1 - relative);
 			posRelative = relative;
 		}
 
-		public boolean isLeftBorder(int height) {
+		public boolean isLeftBorder(Float height) {
 			return height <= heightToLeftBorder;
 		}
 
-		public boolean isRightBorder(int height) {
+		public boolean isRightBorder(Float height) {
 			return height <= heightToRightBorder;
 		}
 
