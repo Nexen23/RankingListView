@@ -1,6 +1,7 @@
 package alex.rankinglist.widget;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -15,6 +16,7 @@ import android.widget.ScrollView;
 import java.util.ArrayList;
 import java.util.List;
 
+import alex.rankinglist.R;
 import alex.rankinglist.databinding.WidgetRankingListBinding;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
@@ -28,6 +30,8 @@ public class RankingListView extends ScrollView {
 	ScaleGestureDetector scaleDetector;
 	Integer rankingsListViewHeightMin;
 
+	private int maxWidth = Integer.MAX_VALUE;
+
 	public RankingListView(Context context) {
 		super(context);
 		init();
@@ -35,16 +39,23 @@ public class RankingListView extends ScrollView {
 
 	public RankingListView(Context context, @Nullable AttributeSet attrs) {
 		super(context, attrs);
+		parseAttrs(attrs);
 		init();
 	}
 
 	public RankingListView(Context context, @Nullable AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		parseAttrs(attrs);
 		init();
 	}
 
+	private void parseAttrs(AttributeSet attrs) {
+		TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.RankingListView);
+		maxWidth = a.getDimensionPixelSize(R.styleable.RankingListView_max_width, Integer.MAX_VALUE);
+		a.recycle();
+	}
+
 	private void init() {
-		setFillViewport(true);
 		binding = WidgetRankingListBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		scaleDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
 
@@ -54,6 +65,17 @@ public class RankingListView extends ScrollView {
 				0.0f, 0.0f, 0);
 		scaleDetector.onTouchEvent(motionEvent);
 		motionEvent.recycle();
+	}
+
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		int measuredWidth = MeasureSpec.getSize(widthMeasureSpec);
+		if(maxWidth > 0 && maxWidth < measuredWidth) {
+			int measureMode = MeasureSpec.getMode(widthMeasureSpec);
+			widthMeasureSpec = MeasureSpec.makeMeasureSpec(maxWidth, measureMode);
+		}
+
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
 	private void fillRankingList(List<Ranking> rankings) {

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:background="@android:color/darker_gray">
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<!-- HACK: 26.01.2017 making inner LinearLayout height dynamically changable -->
 	<FrameLayout

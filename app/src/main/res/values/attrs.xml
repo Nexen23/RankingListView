@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<declare-styleable name="RankingListView">
+		<attr name="max_width" format="dimension" />
+	</declare-styleable>
+</resources>

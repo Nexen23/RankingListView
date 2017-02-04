@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools">
+	xmlns:tools="http://schemas.android.com/tools"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<alex.rankinglist.widget.RankingListView
-		android:id="@+id/ranking_list"
+	<FrameLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:fillViewport="true"/>
+		android:background="@android:color/darker_gray">
+
+		<alex.rankinglist.widget.RankingListView
+			android:id="@+id/ranking_list"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_gravity="center"
+			app:max_width="500dp"
+			android:fillViewport="true"/>
+
+	</FrameLayout>
 
 </layout>
