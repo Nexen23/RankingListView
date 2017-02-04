@@ -17,6 +17,7 @@ import java.util.List;
 
 import alex.rankinglist.databinding.WidgetRankingListBinding;
 import alex.rankinglist.util.LogUtil;
+import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.Ranking;
 import alex.rankinglist.widget.model.User;
@@ -143,7 +144,7 @@ public class RankingListView extends ScrollView {
 		float scrollY = curScrollY + focusY;
 		float coef = scrollY / rootHeight;
 
-		final float newHeight = Math.max(rootHeight * scaleFactor, rankingsListViewHeightMin),
+		final float newHeight = MathUtil.InRange(rootHeight * scaleFactor, rankingsListViewHeightMin, 1_000_000.0f),
 				newScrollY = newHeight * coef - focusY;//scrollY * scaleFactor;
 
 		//LogUtil.log("--------------------------------");

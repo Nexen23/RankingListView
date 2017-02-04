@@ -2,7 +2,7 @@ package alex.rankinglist.util;
 
 
 public class MathUtil {
-	private static final float EPSILON = 0.001f;
+	public static final float EPSILON = 0.001f;
 
 	public static float InRange(float value, float min, float max) {
 		return Math.max(min, Math.min(value, max));
