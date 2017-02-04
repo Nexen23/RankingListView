@@ -103,6 +103,12 @@ public class RankingListView extends ScrollView {
 		scaleDetector.onTouchEvent(ev);
 		if (ev.getPointerCount() == 1) {
 			super.onTouchEvent(ev);
+		} else {
+			MotionEvent.PointerCoords p1 = new MotionEvent.PointerCoords();
+			ev.getPointerCoords(ev.getPointerId(0), p1);
+			MotionEvent.PointerCoords p2 = new MotionEvent.PointerCoords();
+			ev.getPointerCoords(ev.getPointerId(1), p2);
+			//LogUtil.i(this, "---------------- dist=%.3f : action=%d", MathUtil.Distance(p1, p2), ev.getActionMasked());
 		}
 		return true;
 	}
@@ -151,7 +157,7 @@ public class RankingListView extends ScrollView {
 		}
 	}
 
-	private void scale(final float detectedScaleFactor, final float focusY) {
+	private void scale(final float detectedScaleFactor, final float focusY, float currentSpan) {
 		//for (int i = 0; i < binding.listRankingViews.getChildCount(); ++i) {
 		// FIXME: 26.01.2017 strange jump on (first?) zoom in
 
@@ -171,8 +177,8 @@ public class RankingListView extends ScrollView {
 
 		//LogUtil.log("--------------------------------");
 
-		LogUtil.log("-------------------------------- [factor=%.3f] prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d (PARAMS:%d) ++ focusY=%.2f",
-				scaleFactor,
+		LogUtil.log("-------------------------------- [factor=%.3f(dist=%.3f)] prev:%d(%.3f), next:%d(%.3f); height::newHeight = %d::%d (PARAMS:%d) ++ focusY=%.2f",
+				scaleFactor, currentSpan,
 				(int) scrollY, coef,
 				(int) (newScrollY + focusY), (newScrollY + focusY) / newHeight,
 				(int) rootHeight, (int) newHeight, params.height,
@@ -201,7 +207,7 @@ public class RankingListView extends ScrollView {
 
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			scale(detector.getScaleFactor(), detector.getFocusY());
+			scale(detector.getScaleFactor(), detector.getFocusY(), detector.getCurrentSpan());
 			return true;
 		}
 	}
