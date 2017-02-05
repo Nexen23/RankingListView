@@ -14,6 +14,7 @@ import java.util.ListIterator;
 import java.util.Stack;
 
 import alex.rankinglist.R;
+import alex.rankinglist.misc.TreeNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -76,7 +77,7 @@ public class UsersView extends FrameLayout {
 		if (!users.isEmpty()) {
 			LinkedList<TreeNode> usersGroups = new LinkedList<>();
 			for (User user : users) {
-				usersGroups.add(new TreeNode(rank, user));
+				usersGroups.add(new TreeNode(userViewHeightPx, rank, user));
 			}
 			Collections.sort(usersGroups);
 			usersGroupsCount = usersGroups.size();
@@ -100,7 +101,7 @@ public class UsersView extends FrameLayout {
 
 
 
-	public class DistanceNode implements Comparable<DistanceNode>,OnParentUpdate {
+	public class DistanceNode implements Comparable<DistanceNode>, TreeNode.OnParentUpdate {
 		TreeNode from, to;
 		Float intersectingHeight;
 
@@ -153,7 +154,12 @@ public class UsersView extends FrameLayout {
 		public void compose(int height) {
 			from.listeners.remove(this);
 			to.listeners.remove(this);
-			groupsHistory.push(new TreeNode(height, from, to));
+			final TreeNode newNode = new TreeNode(userViewHeightPx, height, from, to);
+			if (from == usersGroupsRoot) {
+				usersGroupsRoot = newNode;
+			}
+
+			groupsHistory.push(newNode);
 			usersGroupsCount--;
 		}
 
@@ -400,199 +406,7 @@ public class UsersView extends FrameLayout {
 		}
 	}
 
-	private float calcAbsolutePos(int height, float relativePos) {
-		float posFromTopPx = height * relativePos;
-		float centeredPosFromTopPx = posFromTopPx - userViewHeightHalfPx;
-		return MathUtil.InRange(centeredPosFromTopPx, 0, height - userViewHeightPx);
-	}
-
 	private float calcScoreByRelativePos(float relativePos) {
 		return (rank.scoreMax - rank.scoreMin) * (1 - relativePos) + rank.scoreMin;
-	}
-
-
-
-
-	interface OnParentUpdate {
-		void parentSetFor(TreeNode node, TreeNode parent);
-		void breakNode(TreeNode node);
-	}
-
-	public class TreeNode implements Comparable<TreeNode> {
-		Float posRelative;
-		Float posAbsolute;
-		TreeNode left, right;
-		int groupSize;
-		Float heightToLeftBorder, heightToRightBorder;
-
-		User mainUser;
-
-
-		TreeNode prev, next; // for lists moving and updating
-		LinkedList<OnParentUpdate> listeners = new LinkedList<>();
-
-		public TreeNode(final int height, final TreeNode left, final TreeNode right) {
-			this.left = left;
-			this.right = right;
-
-			if (left.prev != null) {
-				left.prev.next = this;
-			}
-			prev = left.prev;
-
-			if (right.next != null) {
-				right.next.prev = this;
-			}
-			next = right.next;
-
-			if (left == usersGroupsRoot) {
-				usersGroupsRoot = this;
-			}
-
-			mainUser = left.mainUser;
-			groupSize = left.groupSize + right.groupSize;
-
-			final boolean leftIsBorder = left.isLeftBorder((float) height),
-					rightIsBorder = right.isRightBorder((float) height);
-			// FIXME: 04.02.2017 relativePoses can be equal
-			final int wouldIntersectWhenHeight = (int) (userViewHeightPx / (right.posRelative - left.posRelative));
-
-			while (true) {
-				if (!leftIsBorder && !rightIsBorder) {
-					intersectNoBorders(height);
-					break;
-				}
-
-				final boolean intersectedBeforeLeftBecameBorder = wouldIntersectWhenHeight >= left.heightToLeftBorder,
-						intersectedBeforeRightBecameBorder = wouldIntersectWhenHeight >= right.heightToRightBorder;
-
-				if (leftIsBorder && !rightIsBorder) {
-					if (intersectedBeforeLeftBecameBorder) { // intersect before left became border
-						intersectNoBorders(height);
-					} else { // intersect with left border
-						intersectWithLeftBorder();
-					}
-					break;
-				}
-
-				if (!leftIsBorder && rightIsBorder) {
-					if (intersectedBeforeRightBecameBorder) { // intersect before right became border
-						intersectNoBorders(height);
-					} else { // intersect with right border
-						intersectWithRightBorder();
-					}
-					break;
-				}
-
-				if (leftIsBorder && rightIsBorder) {
-					if (intersectedBeforeLeftBecameBorder) {
-						if (intersectedBeforeRightBecameBorder) {
-							intersectNoBorders(height);
-						} else {
-							intersectWithRightBorder();
-						}
-					} else {
-						if (intersectedBeforeRightBecameBorder) {
-							intersectWithLeftBorder();
-						} else { // both are borders
-							intersectBothBorders();
-						}
-					}
-					break;
-				}
-				throw new IllegalStateException();
-			}
-
-			updateAbsolutePos(height);
-
-			left.setParent(this);
-			right.setParent(this);
-		}
-
-		void intersectNoBorders(int height) {
-			//final float prev = (left.posAbsolute + right.posAbsolute + userViewHeightPx) / (2.0f * height);
-			float now = (right.posRelative + left.posRelative) / 2;
-
-			setRelativePos(now);
-
-			/*if (!MathUtil.IsEqual(prev, now)) {
-				LogUtil.err(this, "%.4f(real) != %.4f(best)", prev, now);
-			}*/
-			//Assert.assertEquals(posRelative, test, MathUtil.EPSILON);
-		}
-
-		void intersectWithLeftBorder() {
-			// FIXME: 04.02.2017 relativePos can be 0
-			float intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / right.posRelative;
-			setRelativePos(userViewHeightPx / intersectingHeight);
-		}
-
-		void intersectWithRightBorder() {
-			// FIXME: 04.02.2017 relativePos can be 1
-			float intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / (1 - left.posRelative);
-			setRelativePos((intersectingHeight - userViewHeightPx) / intersectingHeight);
-		}
-
-		void intersectBothBorders() {
-			setRelativePos(0.5f);
-		}
-
-
-
-
-
-
-
-		void setParent(TreeNode parent) {
-			LinkedList<OnParentUpdate> listenersClone = new LinkedList<>(listeners);
-			for (OnParentUpdate listener : listenersClone) {
-				listener.parentSetFor(this, parent);
-			}
-		}
-
-		void breakNode() {
-			LinkedList<OnParentUpdate> listenersClone = new LinkedList<>(listeners);
-			for (OnParentUpdate listener : listenersClone) {
-				listener.breakNode(this);
-			}
-		}
-
-		public TreeNode(Rank rank, User mainUser) {
-			this.mainUser = mainUser;
-			setRelativePos((rank.scoreMax - mainUser.score) / (rank.scoreMax - rank.scoreMin));
-			groupSize = 1;
-		}
-
-		public void setRelativePos(float relative) {
-			// FIXME: 04.02.2017 relative can be 0 or 1
-			heightToLeftBorder = userViewHeightHalfPx / relative;
-			heightToRightBorder = userViewHeightHalfPx / (1 - relative);
-			posRelative = relative;
-		}
-
-		public boolean isLeftBorder(Float height) {
-			return height <= heightToLeftBorder;
-		}
-
-		public boolean isRightBorder(Float height) {
-			return height <= heightToRightBorder;
-		}
-
-		public void updateAbsolutePos(int height) {
-			posAbsolute = calcAbsolutePos(height, posRelative);
-		}
-
-		public Float calcAndGetAbsolutePos(int height) {
-			return posAbsolute = calcAbsolutePos(height, posRelative);
-		}
-
-		public boolean isLeaf() {
-			return left == null && right == null;
-		}
-
-		@Override
-		public int compareTo(TreeNode o) {
-			return Float.compare(posRelative, o.posRelative);
-		}
 	}
 }
