@@ -187,6 +187,10 @@ public class TreeNode implements Comparable<TreeNode> {
 		return left == null && right == null;
 	}
 
+	public double getCenterPosPx() {
+		return posAbsolute + userViewHeightHalfPx;
+	}
+
 	@Override
 	public int compareTo(TreeNode o) {
 		return Float.compare(posRelative, o.posRelative);

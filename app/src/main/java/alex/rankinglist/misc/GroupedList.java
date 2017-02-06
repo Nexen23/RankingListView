@@ -15,7 +15,7 @@ import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
 
-public class ClusteredList {
+public class GroupedList {
 	Integer prevHeight;
 	private final @Px int userViewHeightPx;
 	private final float userViewHeightHalfPx;
@@ -25,12 +25,24 @@ public class ClusteredList {
 	LinkedList<DistanceNode> groupsDistances = new LinkedList<>();
 	Stack<TreeNode> groupsHistory = new Stack<>();
 
-	public ClusteredList(@Px int userViewHeightPx) {
+	public GroupedList(@Px int userViewHeightPx) {
 		this.userViewHeightPx = userViewHeightPx;
 		userViewHeightHalfPx = userViewHeightPx / 2.0f;
 	}
 
+	public void clearData() {
+		usersGroupsCount = 0;
+		groupsDistances = new LinkedList<>();
+		groupsHistory = new Stack<>();
+		usersGroupsRoot = null;
+		prevHeight = null;
+	}
+
 	public void setData(Rank rank, List<User> users) {
+		if (usersGroupsRoot != null) {
+			clearData();
+		}
+
 		if (!users.isEmpty()) {
 			LinkedList<TreeNode> usersGroups = new LinkedList<>();
 			for (User user : users) {
@@ -53,7 +65,7 @@ public class ClusteredList {
 		}
 	}
 
-	public boolean updateChilds(int width, int height) {
+	public boolean updateChilds(int height) {
 		if (usersGroupsCount > 0) {
 			LogUtil.log(this, "updateChilds(height=%d)", height);
 
@@ -126,16 +138,16 @@ public class ClusteredList {
 	boolean logged = false;
 	private void logDistances() {
 //		String str = String.format("%d = [ ", groupsDistances.size());
-//		for (DistanceNode node : groupsDistances) {
-//			str = String.format("%s(%.5f: %s--%s) ", str, node.distance, node.from.mainUser.name, node.to.mainUser.name);
+//		for (DistanceNode currentNode : groupsDistances) {
+//			str = String.format("%s(%.5f: %s--%s) ", str, currentNode.distance, currentNode.from.mainUser.name, currentNode.to.mainUser.name);
 //		}
 //		LogUtil.i(this, "%s]", str);
 //
 //		str = String.format("^ %d = [ ", usersGroupsCount);
-//		TreeNode node = usersGroupsRoot;
-//		while (node != null) {
-//			str = String.format("%s(%s: %.5f) ", str, node.mainUser.name, node.posAbsolute);
-//			node = node.next;
+//		TreeNode currentNode = usersGroupsRoot;
+//		while (currentNode != null) {
+//			str = String.format("%s(%s: %.5f) ", str, currentNode.mainUser.name, currentNode.posAbsolute);
+//			currentNode = currentNode.next;
 //		}
 //		LogUtil.log(this, "%s]", str);
 
@@ -206,6 +218,48 @@ public class ClusteredList {
 			} else {
 				break;
 			}
+		}
+	}
+
+
+
+	public java.util.Iterator<TreeNode> getGroupsIterator() {
+		return new Iterator(usersGroupsRoot);
+	}
+
+	public int getGroupsCount() {
+		return usersGroupsCount;
+	}
+
+
+
+
+	public class Group<T> {
+
+	}
+
+	private class TwoWayNode<T> {
+		private TwoWayNode<T> prev, next;
+		private T data;
+	}
+
+	private class Iterator implements java.util.Iterator<TreeNode> {
+		private TreeNode currentNode;
+
+		public Iterator(TreeNode rootNode) {
+			this.currentNode = rootNode;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentNode != null;
+		}
+
+		@Override
+		public TreeNode next() {
+			TreeNode prevNode = currentNode;
+			currentNode = currentNode.next;
+			return prevNode;
 		}
 	}
 }

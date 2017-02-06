@@ -10,7 +10,7 @@ import junit.framework.Assert;
 import java.util.List;
 
 import alex.rankinglist.R;
-import alex.rankinglist.misc.ClusteredList;
+import alex.rankinglist.misc.GroupedList;
 import alex.rankinglist.misc.TreeNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -18,7 +18,7 @@ import alex.rankinglist.widget.model.User;
 
 
 public class UsersView extends FrameLayout {
-	private ClusteredList clusteredList;
+	private GroupedList groupedList;
 	private Rank rank;
 
 	public UsersView(Context context) {
@@ -37,7 +37,7 @@ public class UsersView extends FrameLayout {
 	}
 
 	void init() {
-		clusteredList = new ClusteredList(getResources().getDimensionPixelSize(R.dimen.user_view_height));
+		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.user_view_height));
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class UsersView extends FrameLayout {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
-		if (clusteredList.updateChilds(w, h)) {
+		if (groupedList.updateChilds(h)) {
 			createOrRemoveGroupsViews();
 			updateGroupsViews();
 
@@ -68,14 +68,14 @@ public class UsersView extends FrameLayout {
 
 	public void setModel(Rank rank, List<User> users) {
 		this.rank = rank;
-		clusteredList.setData(rank, users);
+		groupedList.setData(rank, users);
 	}
 
 
 
 	private void createOrRemoveGroupsViews() {
 		// Create
-		int childsCount = getChildCount(), groupsCount = clusteredList.usersGroupsCount;
+		int childsCount = getChildCount(), groupsCount = groupedList.usersGroupsCount;
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
@@ -87,10 +87,10 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void updateGroupsViews() {
-		Assert.assertSame(getChildCount(), clusteredList.usersGroupsCount);
+		Assert.assertSame(getChildCount(), groupedList.usersGroupsCount);
 
-		TreeNode group = clusteredList.usersGroupsRoot;
-		for (int i = 0; i < clusteredList.usersGroupsCount; ++i) {
+		TreeNode group = groupedList.usersGroupsRoot;
+		for (int i = 0; i < groupedList.usersGroupsCount; ++i) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 //			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 //			params.topMargin = group.posAbsolute.intValue();
