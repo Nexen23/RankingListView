@@ -65,9 +65,14 @@ public class GroupedList {
 		}
 	}
 
-	public boolean updateChilds(int height) {
+	public boolean setSize(int height) {
+		if (height < userViewHeightPx) {
+			final String message = String.format("Size(%d) must be greater than view size(%d)", height, userViewHeightPx);
+			throw new IllegalArgumentException(message);
+		}
+
 		if (usersGroupsCount > 0) {
-			LogUtil.log(this, "updateChilds(height=%d)", height);
+			LogUtil.log(this, "setSize(height=%d)", height);
 
 			LogUtil.err(this, "----------- = [ %d ---------------", height);
 			logGroups();
@@ -105,34 +110,9 @@ public class GroupedList {
 		Collections.sort(groupsDistances);
 	}
 
-	void innerLog(StringBuilder b, TreeNode node, boolean isLeft) {
-		if (node.left != null) {
-			b.append('{');
-			innerLog(b, node.left, true);
-			b.append(", ");
-			innerLog(b, node.right, false);
-			b.append('}');
-		} else {
-			b.append(String.format("%s", node.mainUser.name));
-		}
-	}
 
 	void logGroups() {
-		StringBuilder builder = new StringBuilder();
-		builder.append(String.format("%d = [", usersGroupsCount));
-
-		TreeNode node = usersGroupsRoot;
-		while (node != null) {
-			innerLog(builder, node, false);
-			if (node.next != null) {
-				builder.append(" + ");
-			}
-			node = node.next;
-		}
-
-		builder.append("]");
-
-		LogUtil.i(this, builder.toString());
+		LogUtil.i(this, toTreeString());
 	}
 
 	boolean logged = false;
@@ -231,7 +211,35 @@ public class GroupedList {
 		return usersGroupsCount;
 	}
 
+	void innerLog(StringBuilder b, TreeNode node, boolean isLeft) {
+		if (node.left != null) {
+			b.append('{');
+			innerLog(b, node.left, true);
+			b.append(", ");
+			innerLog(b, node.right, false);
+			b.append('}');
+		} else {
+			b.append(String.format("%s", node.mainUser.name));
+		}
+	}
 
+	public String toTreeString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(String.format("%d = [", usersGroupsCount));
+
+		TreeNode node = usersGroupsRoot;
+		while (node != null) {
+			innerLog(builder, node, false);
+			if (node.next != null) {
+				builder.append(" + ");
+			}
+			node = node.next;
+		}
+
+		builder.append("]");
+
+		return builder.toString();
+	}
 
 
 	public class Group<T> {

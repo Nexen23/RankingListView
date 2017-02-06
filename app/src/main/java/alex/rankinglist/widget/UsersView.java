@@ -50,7 +50,7 @@ public class UsersView extends FrameLayout {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
-		if (groupedList.updateChilds(h)) {
+		if (groupedList.setSize(h)) {
 			createOrRemoveGroupsViews();
 			updateGroupsViews();
 
