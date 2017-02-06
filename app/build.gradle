@@ -40,9 +40,6 @@ dependencies {
 	})
 	compile 'com.android.support:appcompat-v7:25.1.0'
 	testCompile 'junit:junit:4.12'
-	compile 'com.android.support:recyclerview-v7:25.1.0'
-
-	compile 'com.jakewharton:butterknife:8.4.0'
-	annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
+	testCompile 'org.hamcrest:hamcrest-all:1.3'
 }
 
