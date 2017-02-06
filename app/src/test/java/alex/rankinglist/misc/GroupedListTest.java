@@ -4,27 +4,30 @@ import android.graphics.Color;
 import android.support.annotation.Px;
 
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
-import alex.rankinglist.util.RandomUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
 
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertThat;
 
 public class GroupedListTest {
+	@Rule
+	public final ExpectedException exception = ExpectedException.none();
+
 	private static final double DELTA = MathUtil.EPSILON;
 	private static final @Px int VIEW_SIZE = 105;
-	private static final float VIEW_HALF_SIZE = VIEW_SIZE / 2.0f;
 	private static Rank rank;
 	private static GroupedList groupedList;
 
@@ -35,126 +38,244 @@ public class GroupedListTest {
 		groupedList = new GroupedList(VIEW_SIZE);
 	}
 
-	//region Compose
+	//region setData()
 	@Test
-	public void compose_2To1_noBorders() {
+	public void setData_callsAreIndependent() {
+		groupedList.setData(rank, users(10, 70));
+		groupedList.setSize(1000);
+
 		groupedList.setData(rank, users(30, 40));
+		groupedList.setSize(1000);
 
-		groupedList.updateChilds(1000);
-
-		assertSingleGroupLocated(350);
+		assertSingleGroupIsLocated(350);
 	}
 
 	@Test
-	public void compose_2To1_topBorder() {
-		groupedList.setData(rank, users(6, 14));
+	public void setData_groupsAreSortedByPosition() {
+		groupedList.setData(rank, users(17, 77, 33, 25, 78, 70));
 
-		groupedList.updateChilds(1000);
-
-		assertSingleGroupLocated(100);
+		assertGroupsTreeIs("6 = [0 + 3 + 2 + 5 + 1 + 4]");
 	}
 
 	@Test
-	public void compose_2To1_bottomBorder() {
-		groupedList.setData(rank, users(86, 94));
-
-		groupedList.updateChilds(1000);
-
-		assertSingleGroupLocated(900);
-	}
-
-	@Test
-	public void compose_2To1_bothBorders() {
-		groupedList.setData(rank, users(0, 100));
-
-		groupedList.updateChilds(200);
-
-		assertSingleGroupLocated(100);
-	}
-
-	/*@Test
-	public void compose_4To2_topBorder() {
-	}
-
-	@Test
-	public void compose_4To2_bottomBorder() {
-	}
-
-	@Test
-	public void compose_ManyToMany_noBorders() {
-	}
-
-	@Test
-	public void compose_ManyToMany_topBorder() {
-	}
-
-	@Test
-	public void compose_ManyToMany_bottomBorder() {
-	}
-
-	@Test
-	public void compose_ManyToMany_bothBorders() {
-	}*/
-	//endregion
-
-	//region Bounds
-	@Test
-	public void setData_viewNotExceedTopBorder() {
+	public void setData_viewNotExceedMinBound() {
 		groupedList.setData(rank, users(5));
 
-		groupedList.updateChilds(1000);
+		groupedList.setSize(1000);
 
-		assertSingleGroupLocated(VIEW_HALF_SIZE);
+		assertSingleGroupIsLocated(leftBorderPos());
 	}
 
 	@Test
-	public void setData_viewNotExceedBottomBorder() {
+	public void setData_viewNotExceedMaxBound() {
 		groupedList.setData(rank, users(95));
 
-		groupedList.updateChilds(1000);
+		groupedList.setSize(1000);
 
-		assertSingleGroupLocated(1000 - VIEW_HALF_SIZE);
+		assertSingleGroupIsLocated(rightBorderPos(1000));
 	}
 
 	@Test
-	public void setData_viewPosDependsOnScore() {
+	public void setData_viewPositionDependsOnScore() {
 		final float score = 30;
 		final int size = 1000;
 		groupedList.setData(rank, users(score));
 
-		groupedList.updateChilds(size);
+		groupedList.setSize(size);
 
-		assertSingleGroupLocated(score / 100.0f * size);
+		assertSingleGroupIsLocated(score / 100.0f * size);
 	}
 	//endregion
 
+	//region Compose groups
+	@Test
+	public void setSize_singleUserStaysUnchanged() {
+		groupedList.setData(rank, users(30));
 
+		groupedList.setSize(1000);
+		groupedList.setSize(200);
+		groupedList.setSize(1000);
 
+		assertSingleGroupIsLocated(300);
+		assertGroupsTreeIs("1 = [0]");
+	}
 
-	public void assertSingleGroupLocated(float viewCenterPosPx) {
+	@Test
+	public void setSize_group2UsersNearTheCenter() {
+		groupedList.setData(rank, users(30, 40));
+
+		groupedList.setSize(1000);
+
+		assertSingleGroupIsLocated(350);
+	}
+
+	@Test
+	public void setSize_group2UsersNearTheMinBound() {
+		groupedList.setData(rank, users(6, 14));
+
+		groupedList.setSize(1000);
+
+		assertSingleGroupIsLocated(100);
+	}
+
+	@Test
+	public void setSize_group2UsersNearTheMaxBound() {
+		groupedList.setData(rank, users(86, 94));
+
+		groupedList.setSize(1000);
+
+		assertSingleGroupIsLocated(900);
+	}
+
+	@Test
+	public void setSize_group2UsersNearTheBounds() {
+		groupedList.setData(rank, users(0, 100));
+
+		groupedList.setSize(200);
+
+		assertSingleGroupIsLocated(100);
+	}
+
+	@Test
+	public void setSize_groupUsersWithSameScore() {
+		groupedList.setData(rank, users(33, 33, 40, 40));
+
+		groupedList.setSize(1000);
+
+		assertGroupsTreeIs("1 = [{{0, 1} + {2, 3}}]");
+	}
+
+	@Test
+	public void setSize_groupRandomUsers() {
+		groupedList.setData(rank, users(17, 25, 33, 51, 52));
+
+		groupedList.setSize(500);
+
+		assertGroupsTreeIs("2 = [{{0, 1}, 2} + {3, 4}]");
+	}
+
+	@Test
+	public void setSize_groupManyUsersNearTheBounds() {
+		groupedList.setData(rank, users(0, 2, 18, 33, 45, 71, 77, 89, 99, 100));
+
+		groupedList.setSize(210);
+
+		assertGroupsTreeIs("1 = [{{{{0, 1}, 2}, {3, 4}}, {{5, 6}, {7, {8, 9}}}}]");
+	}
+
+	@Test
+	public void setSize_throwsIfNotEnoughPlaceForAnyUser() {
+		groupedList.setData(rank, users(10, 90));
+
+		exception.expect(isA(IllegalArgumentException.class));
+		groupedList.setSize(100);
+	}
+
+	@Test
+	public void setSize_notIntersectedUsersAreNotGrouped() {
+		groupedList.setData(rank, users(10, 21, 32, 43, 54, 65, 76, 87));
+
+		groupedList.setSize(1000);
+
+		assertGroupsTreeIs("8 = [0 + 1 + 2 + 3 + 4 + 5 + 6 + 7]");
+	}
+	//endregion
+
+	//region Break groups
+	@Test
+	public void setSize_breakGroupNearTheCenter() {
+		groupedList.setData(rank, users(30, 40));
+
+		groupedList.setSize(10_000);
+		groupedList.setSize(1_000);
+		groupedList.setSize(10_000);
+
+		assertGroupsTreeIs("2 = [{0 + 1}]");
+	}
+
+	@Test
+	public void setSize_breakGroupNearTheMinBound() {
+		groupedList.setData(rank, users(6, 14));
+
+		groupedList.setSize(10_000);
+		groupedList.setSize(1_000);
+		groupedList.setSize(10_000);
+
+		assertGroupsTreeIs("2 = [0 + 1]");
+	}
+
+	@Test
+	public void setSize_breakGroupNearTheMaxBound() {
+		groupedList.setData(rank, users(86, 94));
+
+		groupedList.setSize(10_000);
+		groupedList.setSize(1_000);
+		groupedList.setSize(10_000);
+
+		assertGroupsTreeIs("2 = [0 + 1]");
+	}
+
+	@Test
+	public void setSize_breakGroupNearTheBounds() {
+		groupedList.setData(rank, users(0, 100));
+
+		groupedList.setSize(1000);
+		groupedList.setSize(200);
+		groupedList.setSize(1000);
+
+		assertGroupsTreeIs("2 = [0 + 1]");
+	}
+
+	@Test
+	public void setSize_usersWithSameScoreShouldAlwaysBeInGroup() {
+		groupedList.setData(rank, users(33, 44, 33, 44));
+
+		groupedList.setSize(50_000);
+
+		assertGroupsTreeIs("2 = [{0, 2} + {1, 3}]");
+	}
+
+	@Test
+	public void setSize_breakRandomGroups() {
+		groupedList.setData(rank, users(17, 25, 33, 51, 52));
+
+		groupedList.setSize(200);
+		groupedList.setSize(50_000);
+
+		assertGroupsTreeIs("5 = [0 + 1 + 2 + 3 + 4]");
+	}
+	//endregion
+
+	private void assertSingleGroupIsLocated(float viewCenterPosPx) {
 		assertThat(groupedList.getGroupsCount(), is(1));
 		assertThat(groupedList.getGroupsIterator().hasNext(), is(true));
 		assertThat(groupedList.getGroupsIterator().next().getCenterPosPx(), closeTo(viewCenterPosPx, DELTA));
 	}
 
+	private void assertGroupsTreeIs(String treeString) {
+		assertThat(groupedList.toTreeString(), is(treeString));
+	}
 
-	public User user(float invertedScore, String name) {
+
+	private User user(float invertedScore, String name) {
 		return new User(name, 100 - invertedScore);
 	}
 
-	public User user(float invertedScore) {
-		return user(invertedScore, RandomUtil.GenerateName());
-	}
-
-	public List<User> users(User... users) {
-		return Arrays.asList(users);
-	}
-
-	public List<User> users(float... usersInvertedScores) {
+	private List<User> users(float... usersInvertedScores) {
 		List<User> users = new ArrayList<>(usersInvertedScores.length);
+		int i = 0;
 		for (float invertedScore : usersInvertedScores) {
-			users.add(user(invertedScore));
+			users.add(user(invertedScore, Integer.toString(i)));
+			++i;
 		}
 		return users;
+	}
+
+	private float leftBorderPos() {
+		return VIEW_SIZE / 2.0f;
+	}
+
+	private float rightBorderPos(int size) {
+		return size - VIEW_SIZE / 2.0f;
 	}
 }
