@@ -11,6 +11,6 @@
 	<solid android:color="@android:color/white" />
 
 	<stroke
-		android:color="@color/border"
+		android:color="@color/border_default"
 		android:width="@dimen/border_size_normal"/>
 </shape>

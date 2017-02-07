@@ -8,13 +8,13 @@
 		android:right="@dimen/border_size_normal"
 		android:top="@dimen/border_size_normal"/>
 
-	<solid android:color="@color/group_size" />
+	<solid android:color="@color/green" />
 
 	<stroke
-		android:color="@color/group_size_border"
+		android:color="@color/green_dark"
 		android:width="@dimen/border_size_small"/>
 
 	<size
-		android:width="@dimen/user_group_size_circle"
-		android:height="@dimen/user_group_size_circle"/>
+		android:width="@dimen/group_size_circle_size"
+		android:height="@dimen/group_size_circle_size"/>
 </shape>

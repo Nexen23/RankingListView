@@ -18,7 +18,14 @@ android {
 	}
 
 	buildTypes {
+		debug {
+			debuggable true
+			buildConfigField 'boolean', 'ENABLE_RANDOM', 'false'
+		}
+
 		release {
+			debuggable false
+			buildConfigField 'boolean', 'ENABLE_RANDOM', 'true'
 			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}

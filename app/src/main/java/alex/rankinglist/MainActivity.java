@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-		binding.rankingList.setModel(getRanks(), getUsers());
+		binding.lvRankings.setModel(getRanks(), getUsers());
 	}
 
 	private List<Rank> getRanks() {
@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
 				new Rank("Newbie", 0, 30, R.drawable.icon_smile_3, Color.DKGRAY),
 				new Rank("Good", 30, 85, R.drawable.icon_smile_5, Color.BLUE),
 				new Rank("Best", 85, 100, R.drawable.icon_smile_6, Color.GREEN));
-				//new Rank("Best", 0, 100, R.drawable.icon_smile_5, Color.GREEN));
 	}
 
 	private List<User> getUsers() {

@@ -6,30 +6,30 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
-import alex.rankinglist.databinding.WidgetUserViewBinding;
+import alex.rankinglist.databinding.WidgetGroupViewBinding;
 import alex.rankinglist.widget.model.User;
 
 
-public class UsersGroupView extends FrameLayout {
-	private WidgetUserViewBinding binding;
+public class GroupView extends FrameLayout {
+	private WidgetGroupViewBinding binding;
 
-	public UsersGroupView(Context context) {
+	public GroupView(Context context) {
 		super(context);
 		init();
 	}
 
-	public UsersGroupView(Context context, @Nullable AttributeSet attrs) {
+	public GroupView(Context context, @Nullable AttributeSet attrs) {
 		super(context, attrs);
 		init();
 	}
 
-	public UsersGroupView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+	public GroupView(Context context, @Nullable AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init();
 	}
 
 	void init() {
-		this.binding = WidgetUserViewBinding.inflate(LayoutInflater.from(getContext()), this, true);
+		this.binding = WidgetGroupViewBinding.inflate(LayoutInflater.from(getContext()), this, true);
 	}
 
 	public void setModel(User mainUser, int groupSize, float groupScore) {
@@ -37,7 +37,6 @@ public class UsersGroupView extends FrameLayout {
 		binding.tvRank.setText(String.format("%.2f%%", groupScore));
 		if (groupSize > 1) {
 			binding.tvGroupSize.setVisibility(VISIBLE);
-			//binding.tvGroupSize.setText(HtmlUtil.fromHtml(String.format("<sup>+%d</sup>", groupSize)));
 			binding.tvGroupSize.setText(String.format("+%d", groupSize));
 		} else {
 			binding.tvGroupSize.setVisibility(GONE);

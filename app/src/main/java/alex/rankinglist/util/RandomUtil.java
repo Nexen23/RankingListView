@@ -1,7 +1,6 @@
 package alex.rankinglist.util;
 
 
-import android.support.annotation.FloatRange;
 import android.support.annotation.IntRange;
 
 import java.util.ArrayList;
@@ -11,38 +10,67 @@ import java.util.Random;
 import alex.rankinglist.widget.model.User;
 
 public class RandomUtil {
-	static private Random random = new Random();
-	static int x = 0;
+	private static boolean ENABLE_RANDOM = false;
+	private static Randomizer randomizer = new Randomizer();
 
-	static public String GenerateName() {
-		//return Integer.toHexString(random.nextInt(0xFFFFFF));
-		return Integer.toHexString(x++);
+	public static String GenerateName() {
+		return Integer.toHexString(randomizer.nextInt(0xFFFFFF));
 	}
 
-	static public User GenerateUser() {
-		@FloatRange(from=0, to=100) float score = random.nextFloat() * 100;
+	public static User GenerateUser() {
+		float score = randomizer.nextFloat(100);
 		return new User(GenerateName(), score);
 	}
 
-	static public List<User> GenerateUsersList(@IntRange(from=0) int count) {
-		// FIXME: 26.01.2017 return real impl
+	public static List<User> GenerateUsersList(@IntRange(from=0) int count) {
 		List<User> users = new ArrayList<>(count);
-		for (int i = 0; i <= 6; ++i) {
-			//users.add(GenerateUser());
-			users.add(new User(GenerateName(), i * 5));
+		if (!ENABLE_RANDOM) {
+			for (int i = 0; i <= 6; ++i) {
+				users.add(new User(GenerateName(), i * 5));
+			}
+
+//			users.add(new User(GenerateName(), 1));
+//			users.add(new User(GenerateName(), 10));
+//			users.add(new User(GenerateName(), 17));
+//
+//			users.add(new User(GenerateName(), 1));
+//			users.add(new User(GenerateName(), 20));
+//			users.add(new User(GenerateName(), 47));
+//
+//			users.add(new User(GenerateName(), 80));
+//			users.add(new User(GenerateName(), 85));
+//			users.add(new User(GenerateName(), 75));
+		} else {
+			for (int i = 0; i < count; ++i) {
+				users.add(GenerateUser());
+			}
+		}
+		return users;
+	}
+
+
+
+	private static class Randomizer {
+		private Random random = new Random();
+
+		int nextInteger = 0, iNextFloat = 0;
+		float[] floats = {0, 5, 10, 15, 20, 25};
+
+		public int nextInt(int range) {
+			if (ENABLE_RANDOM) {
+				return random.nextInt(range);
+			} else {
+				return nextInteger++;
+			}
 		}
 
-//		users.add(new User(GenerateName(), 1));
-//		users.add(new User(GenerateName(), 10));
-//		users.add(new User(GenerateName(), 17));
-
-//		users.add(new User(GenerateName(), 1));
-//		users.add(new User(GenerateName(), 20));
-//		users.add(new User(GenerateName(), 47));
-
-//		users.add(new User(GenerateName(), 80));
-//		users.add(new User(GenerateName(), 85));
-//		users.add(new User(GenerateName(), 75));
-		return users;
+		public float nextFloat(float range) {
+			if (ENABLE_RANDOM) {
+				return random.nextFloat() * range;
+			} else {
+				iNextFloat %= floats.length;
+				return floats[iNextFloat++];
+			}
+		}
 	}
 }

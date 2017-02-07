@@ -3,6 +3,7 @@ package alex.rankinglist.widget;
 import android.content.Context;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
+import android.support.annotation.Px;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.animation.LinearInterpolator;
@@ -21,9 +22,12 @@ import alex.rankinglist.widget.model.User;
 
 
 public class RankingView extends FrameLayout {
-	int cornerRadiusPx, spaceBetweenChilrenPx;
 	WidgetRankingBinding binding;
-	private int sharedHeight;
+	private @Px int cornerRadius, spaceBetweenChildren;
+	private int animationDuration;
+
+	private @Px int sharedHeight;
+	private boolean shouldHideIcon = false;
 
 	public RankingView(Context context) {
 		super(context);
@@ -42,64 +46,43 @@ public class RankingView extends FrameLayout {
 
 	void init() {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
-		cornerRadiusPx = getResources().getDimensionPixelSize(R.dimen.border_corner_large);
-		spaceBetweenChilrenPx = getResources().getDimensionPixelSize(R.dimen.space_normal);
+		cornerRadius = getResources().getDimensionPixelSize(R.dimen.border_corner_large);
+		spaceBetweenChildren = getResources().getDimensionPixelSize(R.dimen.space_normal);
+		animationDuration = getResources().getInteger(R.integer.animation_duration);
 		setMinimumHeight(binding.getRoot().getMinimumHeight());
 	}
 
-	public void setSharedHeight(int imaginaryHeight) {
-		this.sharedHeight = imaginaryHeight;
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		LogUtil.d(this, "onMeasure(%s)", LogUtil.MeasureSpecToString(heightMeasureSpec));
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
-
-	int t = 200;
-	boolean shouldHideIcon = false;
 
 	@Override
 	protected void onSizeChanged(int width, int height, int oldw, int oldh) {
-		LogUtil.log(this, "onSizeChanged()");
+		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(width, height, oldw, oldh);
-		int requiredHeight = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivRank.getHeight()
-				+ spaceBetweenChilrenPx * 2;
+
+		int requiredHeight = binding.tvScore.getHeight() + binding.tvTitle.getHeight() + binding.ivIcon.getHeight()
+				+ spaceBetweenChildren * 2;
 		boolean shouldHideIcon = requiredHeight > sharedHeight;
-		LogUtil.i(this, "onSizeChanged: requiredHeight=%d :: realHeight=%d <shared=%d> :: shouldHideIcon=%s",
+		LogUtil.i(this, "onSizeChanged: requiredHeight=%d, realHeight=%d, sharedHeight=%d --> shouldHideIcon=%s",
 				requiredHeight, height, sharedHeight, shouldHideIcon);
 
 		if (this.shouldHideIcon != shouldHideIcon) {
-			final ImageView logoView = binding.ivRank;
-			final float curAlpha = logoView.getAlpha();
-			if (shouldHideIcon) {
-				final float realDuration = curAlpha * t;
-				logoView.animate()
-						.alpha(0.0f)
-						.setDuration((long) realDuration)
-						.setInterpolator(new LinearInterpolator())
-						.withEndAction(new Runnable() {
-							@Override
-							public void run() {
-								logoView.setVisibility(GONE);
-							}
-						});
-			} else {
-				final float realDuration = (1 - curAlpha) * t;
-				logoView.setVisibility(VISIBLE);
-				logoView.animate()
-						.alpha(1.0f)
-						.setDuration((long) realDuration);
-			}
 			this.shouldHideIcon = shouldHideIcon;
+			if (shouldHideIcon) {
+				hideIcon();
+			} else {
+				showIcon();
+			}
 		}
 	}
 
 	@Override
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-		LogUtil.log(this, "onLayout()");
+		LogUtil.d(this, "onLayout()");
 		super.onLayout(changed, left, top, right, bottom);
-	}
-
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		LogUtil.log(this, "onMeasure()");
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
 	public void setModel(Ranking ranking) {
@@ -107,52 +90,48 @@ public class RankingView extends FrameLayout {
 		setUsers(ranking.rank, ranking.users);
 	}
 
-	private void setUsers(Rank rank, List<User> users) {
-		binding.vUsers.setModel(rank, users);
+	public void setSharedHeight(int imaginaryHeight) {
+		this.sharedHeight = imaginaryHeight;
 	}
 
+	private void setUsers(Rank rank, List<User> users) {
+		binding.lUsers.setModel(rank, users);
+	}
 
 	private void setRank(Rank rank) {
-		binding.ivRank.setImageResource(rank.iconResId);
-
-//		postDelayed(new Runnable() {
-//			@Override
-//			public void run() {
-//				binding.ivRank.animate().setInterpolator(new LinearInterpolator());
-//
-//				final float x = binding.ivRank.getX();
-//				final float delta = 300;
-//				binding.ivRank.animate().xBy(delta).setDuration(t).start();
-//				postDelayed(new Runnable() {
-//					@Override
-//					public void run() {
-//						binding.ivRank.animate().cancel();
-//
-//						float xcur = binding.ivRank.getX();
-//						float coef = 1 - (xcur - x) / delta;
-//						int dur = (int) (coef * t);
-//						binding.ivRank.animate()
-//								.x(x)
-//								.setDuration(dur)
-//								.start();
-//					}
-//				}, t/2);
-//			}
-//		}, 500);
-
+		binding.ivIcon.setImageResource(rank.iconResId);
 		binding.tvTitle.setText(rank.name);
 		binding.tvScore.setText(String.format("%s%%", String.valueOf(rank.scoreMax)));
 		setBackground(rank.backgroundColor, rank.scoreMin == 0, rank.scoreMax == 100);
 	}
 
 	private void setBackground(@ColorInt int color, boolean isBottomRank, boolean isTopRank) {
-		final int leftTopCorner = isTopRank ? cornerRadiusPx : 0;
-		final int leftBottomCorner = isBottomRank ? cornerRadiusPx : 0;
+		final int leftTopCorner = isTopRank ? cornerRadius : 0;
+		final int leftBottomCorner = isBottomRank ? cornerRadius : 0;
 		float[] radii = {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner};
 
 		/*PaintDrawable drawable = new PaintDrawable(color);
 		drawable.setCornerRadii(radii);*/
 		CorneredColorDrawable drawable = new CorneredColorDrawable(color, radii);
-		binding.lScoresRuler.setBackground(drawable);
+		binding.lRank.setBackground(drawable);
+	}
+
+	private void hideIcon() {
+		final ImageView iconView = binding.ivIcon;
+		final float realDuration = iconView.getAlpha() * animationDuration;
+		iconView.animate()
+				.alpha(0.0f)
+				.setDuration((long) realDuration)
+				.setInterpolator(new LinearInterpolator())
+				.withEndAction(() -> iconView.setVisibility(GONE));
+	}
+
+	private void showIcon() {
+		final ImageView iconView = binding.ivIcon;
+		final float realDuration = (1 - iconView.getAlpha()) * animationDuration;
+		iconView.setVisibility(VISIBLE);
+		iconView.animate()
+				.alpha(1.0f)
+				.setDuration((long) realDuration);
 	}
 }

@@ -7,15 +7,15 @@
 	<FrameLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@android:color/darker_gray">
+		android:background="@color/gray">
 
-		<alex.rankinglist.widget.RankingListView
-			android:id="@+id/ranking_list"
+		<alex.rankinglist.widget.RankingsListView
+			android:id="@+id/lv_rankings"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:layout_gravity="center"
-			app:max_width="500dp"
-			android:fillViewport="true"/>
+			android:fillViewport="true"
+			app:max_width="500dp"/>
 
 	</FrameLayout>
 

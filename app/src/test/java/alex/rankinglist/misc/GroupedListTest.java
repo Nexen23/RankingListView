@@ -16,8 +16,8 @@ import java.util.ListIterator;
 import java.util.Stack;
 
 import alex.rankinglist.R;
-import alex.rankinglist.misc.grouping.GroupedList;
 import alex.rankinglist.misc.grouping.GroupNode;
+import alex.rankinglist.misc.grouping.GroupedList;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -287,10 +287,11 @@ public class GroupedListTest {
 			public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
 				final Pair<GroupNode, GroupNode> lastGroup = groups.pop();
 				if (lastGroup.first != a || lastGroup.second != b) {
-					String message = String.format("Broken group of User(%s) & User(%s)\n--should be composed of User(%s) & User(%s)",
-							removedGroup.getLeftNode().getData().name, removedGroup.getRightNode().getData().name,
+					String got = String.format("Broken group of User(%s) & User(%s)",
+							removedGroup.getLeftNode().getData().name, removedGroup.getRightNode().getData().name);
+					String expected = String.format("should be composed of User(%s) & User(%s)",
 							a.getData().name, b.getData().name);
-					throw new IllegalStateException(message);
+					throw new IllegalStateException(got + "\n--" + expected);
 				}
 			}
 		});
@@ -317,11 +318,11 @@ public class GroupedListTest {
 				if (iterator.data.hasNext()) {
 					GroupNode expectedGroup = iterator.data.next();
 					if (!composedGroup.equals(expectedGroup)) {
-						String message = String.format("Composed group of User(%s) & User(%s)\n--was previously composed of User(%s) & User(%s)",
-								composedGroup.getLeftNode().getData().name, composedGroup.getRightNode().getData().name,
+						String got = String.format("Composed group of User(%s) & User(%s)",
+								composedGroup.getLeftNode().getData().name, composedGroup.getRightNode().getData().name);
+						String expected = String.format("was previously composed of User(%s) & User(%s)",
 								expectedGroup.getLeftNode().getData().name, expectedGroup.getRightNode().getData().name);
-						composedGroup.equals(expectedGroup);
-						throw new IllegalStateException(message);
+						throw new IllegalStateException(got + "\n--" + expected);
 					}
 				} else {
 					groupsHistory.addLast(composedGroup);

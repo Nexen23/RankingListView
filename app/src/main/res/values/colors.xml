@@ -4,9 +4,9 @@
 	<color name="colorPrimaryDark">#303F9F</color>
 	<color name="colorAccent">#FF4081</color>
 
-	<color name="ruler_color_default">#2c2</color>
-	<color name="group_size">#0b1</color>
-	<color name="group_size_border">#2a0</color>
+	<color name="green">#0b1</color>
+	<color name="green_dark">#2a0</color>
+	<color name="gray">#aaa</color>
 
-	<color name="border">#000</color>
+	<color name="border_default">#000</color>
 </resources>

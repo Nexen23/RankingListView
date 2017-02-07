@@ -71,7 +71,7 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 			Integer oldSpace = space;
 			this.space = newSpace;
 
-			LogUtil.log(this, "setSpace(oldSpace=%d, newSpace=%d)", oldSpace, newSpace);
+			LogUtil.d(this, "setSpace(oldSpace=%d, newSpace=%d)", oldSpace, newSpace);
 			if (oldSpace == null || oldSpace > newSpace) {
 				composeGroups();
 			} else {

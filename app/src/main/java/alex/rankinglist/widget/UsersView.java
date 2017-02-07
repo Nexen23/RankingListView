@@ -18,8 +18,8 @@ import alex.rankinglist.widget.model.User;
 
 
 public class UsersView extends FrameLayout {
-	private GroupedList groupedList;
 	private Rank rank;
+	private GroupedList groupedList;
 
 	public UsersView(Context context) {
 		super(context);
@@ -37,18 +37,18 @@ public class UsersView extends FrameLayout {
 	}
 
 	void init() {
-		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.user_view_height));
+		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		LogUtil.log(this, "onMeasure() %s", LogUtil.MeasureSpecToString(heightMeasureSpec));
+		LogUtil.d(this, "onMeasure(%s)", LogUtil.MeasureSpecToString(heightMeasureSpec));
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		LogUtil.log(this, "onSizeChanged()");
+		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
 			createOrRemoveGroupsViews();
@@ -62,7 +62,7 @@ public class UsersView extends FrameLayout {
 
 	@Override
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-		LogUtil.log(this, "onLayout()");
+		LogUtil.d(this, "onLayout()");
 		super.onLayout(changed, left, top, right, bottom);
 	}
 
@@ -71,13 +71,11 @@ public class UsersView extends FrameLayout {
 		groupedList.setData(rank, users);
 	}
 
-
-
 	private void createOrRemoveGroupsViews() {
 		// Create
 		int childsCount = getChildCount(), groupsCount = groupedList.getGroupsCount();
 		for (int i = childsCount; i < groupsCount; ++i) {
-			addView(new UsersGroupView(getContext()));
+			addView(new GroupView(getContext()));
 		}
 
 		// Remove
@@ -87,20 +85,17 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void updateGroupsViews() {
-		Assert.assertSame(getChildCount(), groupedList.getGroupsCount());
+		Assert.assertEquals(getChildCount(), groupedList.getGroupsCount());
 
 		int i = 0;
 		for (GroupNode group : groupedList) {
-			UsersGroupView child = (UsersGroupView) getChildAt(i);
-//			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
-//			params.topMargin = group.posAbsolute.intValue();
-//			child.setLayoutParams(params);
-			child.setY(group.getAbsolutePos(getHeight()));
+			GroupView view = (GroupView) getChildAt(i);
+			view.setY(group.getAbsolutePos(getHeight()));
 
 			if (group.isLeaf()) {
-				child.setModel(group.getData());
+				view.setModel(group.getData());
 			} else {
-				child.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
+				view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
 			}
 
 			++i;
