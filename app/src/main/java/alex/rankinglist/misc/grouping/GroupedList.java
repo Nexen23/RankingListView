@@ -18,7 +18,7 @@ import alex.rankinglist.widget.model.User;
 
 public class GroupedList extends EventsSource<GroupedList.EventsListener> implements Iterable<Group> {
 	private final @Px int itemSize;
-	private Integer space;
+	private @IntRange(from=0) Integer space;
 
 	public GroupsTree groupsTree = new GroupsTree();
 	private LinkedList<GroupCandidates> groupsCandidates = new LinkedList<>();
@@ -96,7 +96,7 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 				Collections.sort(groupsCandidates);
 
 				final Group constNode = newNode;
-				forEachListener(listener -> listener.onGroup(constNode.getLeftNode(), constNode.getRightNode(), constNode));
+				forEachListener(listener -> listener.onGroup(constNode, constNode.getLeftNode(), constNode.getRightNode()));
 
 				if (groupsCandidates.isEmpty()) {
 					break;
@@ -147,7 +147,7 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 	}
 
 	public interface EventsListener {
-		void onGroup(Group a, Group b, Group composedGroup);
+		void onGroup(Group composedGroup, Group a, Group b);
 		void onBreak(Group removedGroup, Group a, Group b);
 	}
 }

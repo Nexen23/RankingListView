@@ -278,7 +278,7 @@ public class GroupedListTest {
 		final Stack<Pair<Group, Group>> groups = new Stack<>();
 		groupedList.addListener(new GroupedList.EventsListener() {
 			@Override
-			public void onGroup(Group a, Group b, Group composedGroup) {
+			public void onGroup(Group composedGroup, Group a, Group b) {
 				groups.push(Pair.create(a, b));
 			}
 
@@ -308,7 +308,7 @@ public class GroupedListTest {
 			boolean isDirectionForward = true;
 
 			@Override
-			public void onGroup(Group a, Group b, Group composedGroup) {
+			public void onGroup(Group composedGroup, Group a, Group b) {
 				if (!isDirectionForward) {
 					iterator.data.next();
 					isDirectionForward = true;
