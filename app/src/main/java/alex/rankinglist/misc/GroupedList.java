@@ -262,14 +262,14 @@ public class GroupedList {
 	}
 
 
-	public class Group<T> {
+	/*public class Group<T> {
 
 	}
 
 	private class TwoWayNode<T> {
 		private TwoWayNode<T> prev, next;
 		private T data;
-	}
+	}*/
 
 	private class Iterator implements java.util.Iterator<TreeNode> {
 		private TreeNode currentNode;

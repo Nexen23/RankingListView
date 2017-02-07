@@ -36,13 +36,11 @@ public class DistanceNode implements Comparable<DistanceNode>, TreeNode.OnParent
 			}
 
 			if (leftIsBorder && !rightIsBorder) {
-				// FIXME: 04.02.2017 relativePos can be 0
 				intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / right.posRelative;
 				break;
 			}
 
 			if (!leftIsBorder && rightIsBorder) {
-				// FIXME: 04.02.2017 relativePos can be 1
 				intersectingHeight = (userViewHeightPx + userViewHeightHalfPx) / (1 - left.posRelative);
 				break;
 			}

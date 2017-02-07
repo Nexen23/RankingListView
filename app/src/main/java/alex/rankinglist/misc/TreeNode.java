@@ -155,7 +155,6 @@ public class TreeNode implements Comparable<TreeNode> {
 	}
 
 	public void setRelativePos(float relative) {
-		// FIXME: 04.02.2017 relative can be 0 or 1
 		heightToLeftBorder = userViewHeightHalfPx / relative;
 		heightToRightBorder = userViewHeightHalfPx / (1 - relative);
 		posRelative = relative;
