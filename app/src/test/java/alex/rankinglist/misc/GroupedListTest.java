@@ -2,6 +2,7 @@ package alex.rankinglist.misc;
 
 import android.graphics.Color;
 import android.support.annotation.Px;
+import android.support.v4.util.Pair;
 
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -9,7 +10,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Stack;
 
 import alex.rankinglist.R;
 import alex.rankinglist.util.LogUtil;
@@ -243,6 +247,106 @@ public class GroupedListTest {
 		groupedList.setSize(50_000);
 
 		assertGroupsTreeIs("5 = [0 + 1 + 2 + 3 + 4]");
+	}
+	//endregion
+
+	//region Order of groups composing and breaking
+	@Test
+	public void setSize_groupUsersInCorrectOrderNearTheMinBound() {
+		groupedList.setData(rank, users(0, 5, 10, 15));
+
+		groupedList.setSize(225);
+
+		assertSingleGroupIsLocated(leftBorderPos());
+		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
+	}
+
+	@Test
+	public void setSize_groupUsersInCorrectOrderNearTheMaxBound() {
+		groupedList.setData(rank, users(85, 90, 95, 100));
+
+		groupedList.setSize(225);
+
+		assertSingleGroupIsLocated(rightBorderPos(225));
+		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
+	}
+
+	@Test
+	public void setSize_breakGroupsShouldBeInReverseOrderOfComposing() {
+		final Stack<Pair<TreeNode, TreeNode>> groups = new Stack<>();
+		groupedList.addListener(new GroupedList.EventsListener() {
+			@Override
+			public void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup) {
+				groups.push(Pair.create(a, b));
+			}
+
+			@Override
+			public void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b) {
+				final Pair<TreeNode, TreeNode> lastGroup = groups.pop();
+				if (lastGroup.first != a || lastGroup.second != b) {
+					String message = String.format("Broken group of User(%s) & User(%s)\n--should be composed of User(%s) & User(%s)",
+							removedGroup.left.mainUser.name, removedGroup.right.mainUser.name,
+							a.mainUser.name, b.mainUser.name);
+					throw new IllegalStateException(message);
+				}
+			}
+		});
+
+		groupedList.setData(rank, users(17, 25, 33, 51, 52));
+
+		groupedList.setSize(200);
+		groupedList.setSize(10_000);
+	}
+
+	@Test
+	public void setSize_regroupingAfterBreakingShouldBeInTheSameOrderWithAnySpeed() {
+		final LinkedList<TreeNode> groupsHistory = new LinkedList<>();
+		final Wrapper<ListIterator<TreeNode>> iterator = Wrapper.wrap(groupsHistory.listIterator());
+		groupedList.addListener(new GroupedList.EventsListener() {
+			boolean isDirectionForward = true;
+
+			@Override
+			public void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup) {
+				if (!isDirectionForward) {
+					iterator.data.next();
+					isDirectionForward = true;
+				}
+				if (iterator.data.hasNext()) {
+					TreeNode expectedGroup = iterator.data.next();
+					if (!composedGroup.equals(expectedGroup)) {
+						String message = String.format("Composed group of User(%s) & User(%s)\n--was previously composed of User(%s) & User(%s)",
+								composedGroup.left.mainUser.name, composedGroup.right.mainUser.name,
+								expectedGroup.left.mainUser.name, expectedGroup.right.mainUser.name);
+						composedGroup.equals(expectedGroup);
+						throw new IllegalStateException(message);
+					}
+				} else {
+					groupsHistory.addLast(composedGroup);
+					iterator.data = groupsHistory.listIterator(groupsHistory.size());
+				}
+			}
+
+			@Override
+			public void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b) {
+				if (isDirectionForward) {
+					iterator.data.previous();
+					isDirectionForward = false;
+				}
+				iterator.data.previous();
+			}
+		});
+
+		groupedList.setData(rank, users(0, 17, 25, 33, 51, 52, 55, 57, 61, 69, 70, 80, 95, 98, 100));
+
+		// Fast zoom out
+		groupedList.setSize(200);
+
+		// Slow zoom out
+		for (int size = 10_000; size >= 200; size -= 200) {
+			groupedList.setSize(size);
+		}
+
+		assertGroupsTreeIs("1 = [{{0, {{1, 2}, 3}}, {{{{4, 5}, {6, 7}}, 8}, {{{9, 10}, 11}, {12, {13, 14}}}}}]");
 	}
 	//endregion
 

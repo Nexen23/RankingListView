@@ -196,6 +196,31 @@ public class TreeNode implements Comparable<TreeNode> {
 		return Float.compare(posRelative, o.posRelative);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		TreeNode treeNode = (TreeNode) o;
+
+		if (groupSize != treeNode.groupSize) return false;
+		if (!posRelative.equals(treeNode.posRelative)) return false;
+		if (!left.equals(treeNode.left)) return false;
+		if (!right.equals(treeNode.right)) return false;
+		return mainUser.equals(treeNode.mainUser);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = posRelative.hashCode();
+		result = 31 * result + left.hashCode();
+		result = 31 * result + right.hashCode();
+		result = 31 * result + groupSize;
+		result = 31 * result + mainUser.hashCode();
+		return result;
+	}
+
 	public interface OnParentUpdate {
 		void parentSetFor(TreeNode node, TreeNode parent);
 		void breakNode(TreeNode node);
