@@ -2,14 +2,14 @@ package alex.rankinglist.misc;
 
 import alex.rankinglist.util.MathUtil;
 
-public class DistanceNode implements Comparable<DistanceNode>, TreeNode.OnParentUpdate {
+public class GroupCandidate implements Comparable<GroupCandidate>, TreeNode.OnParentUpdate {
 	TreeNode from, to;
 	public Float intersectingHeight;
 
 	private final int userViewHeightPx;
 	private final float userViewHeightHalfPx;
 
-	public DistanceNode(int userViewHeightPx, TreeNode from, TreeNode to) {
+	public GroupCandidate(int userViewHeightPx, TreeNode from, TreeNode to) {
 		this.userViewHeightPx = userViewHeightPx;
 		userViewHeightHalfPx = userViewHeightPx / 2.0f;
 
@@ -89,8 +89,8 @@ public class DistanceNode implements Comparable<DistanceNode>, TreeNode.OnParent
 	}
 
 	@Override
-	public int compareTo(DistanceNode o) {
-		DistanceNode a = this, b = o;
+	public int compareTo(GroupCandidate o) {
+		GroupCandidate a = this, b = o;
 		final int heightsComparison = MathUtil.Compare(b.intersectingHeight, a.intersectingHeight);
 		if (heightsComparison != 0) {
 			return heightsComparison;

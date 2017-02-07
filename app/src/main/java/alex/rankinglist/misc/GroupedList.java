@@ -1,6 +1,8 @@
 package alex.rankinglist.misc;
 
 
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
 import android.support.annotation.Px;
 
 import junit.framework.Assert;
@@ -16,175 +18,140 @@ import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
 
 public class GroupedList {
-	Integer prevHeight;
-	private final @Px int userViewHeightPx;
-	private final float userViewHeightHalfPx;
+	private final @Px int itemSizePx;
+	private final float itemHalfSizePx;
+	private Integer size;
 
-	public TreeNode usersGroupsRoot;
-	public int usersGroupsCount = 0;
-	LinkedList<DistanceNode> groupsDistances = new LinkedList<>();
-	Stack<TreeNode> groupsHistory = new Stack<>();
+	public TreeNode groupsRoot;
+	public int groupsCount = 0;
 
-	public GroupedList(@Px int userViewHeightPx) {
-		this.userViewHeightPx = userViewHeightPx;
-		userViewHeightHalfPx = userViewHeightPx / 2.0f;
+	private LinkedList<GroupCandidate> groupsCandidates = new LinkedList<>();
+	private Stack<TreeNode> groupsHistory = new Stack<>();
+
+	public GroupedList(@Px int itemSizePx) {
+		this.itemSizePx = itemSizePx;
+		itemHalfSizePx = itemSizePx / 2.0f;
 	}
 
 	public void clearData() {
-		usersGroupsCount = 0;
-		groupsDistances = new LinkedList<>();
+		size = null;
+		groupsCandidates = new LinkedList<>();
 		groupsHistory = new Stack<>();
-		usersGroupsRoot = null;
-		prevHeight = null;
+		groupsCount = 0;
+		groupsRoot = null;
 		listeners.clear();
 	}
 
-	public void setData(Rank rank, List<User> users) {
-		if (usersGroupsRoot != null) {
+	public void setData(@NonNull Rank rank, @NonNull List<User> items) {
+		if (groupsCount != 0) {
 			clearData();
 		}
 
-		if (!users.isEmpty()) {
+		if (!items.isEmpty()) {
 			LinkedList<TreeNode> usersGroups = new LinkedList<>();
-			for (User user : users) {
-				usersGroups.add(new TreeNode(userViewHeightPx, rank, user));
+			for (User item : items) {
+				usersGroups.add(new TreeNode(itemSizePx, rank, item));
 			}
 			Collections.sort(usersGroups);
-			usersGroupsCount = usersGroups.size();
+			groupsCount = usersGroups.size();
 
-			groupsDistances.clear();
+			groupsCandidates.clear();
 			ListIterator<TreeNode> iter = usersGroups.listIterator();
 			TreeNode prevNode = iter.next(), curNode;
-			usersGroupsRoot = prevNode;
+			groupsRoot = prevNode;
 			while (iter.hasNext()) {
 				curNode = iter.next();
 				prevNode.next = curNode;
 				curNode.prev = prevNode;
-				groupsDistances.add(new DistanceNode(userViewHeightPx, prevNode, curNode));
+				groupsCandidates.add(new GroupCandidate(itemSizePx, prevNode, curNode));
 				prevNode = curNode;
 			}
 		}
 	}
 
-	public boolean setSize(int height) {
-		if (height < userViewHeightPx) {
-			final String message = String.format("Size(%d) must be greater than view size(%d)", height, userViewHeightPx);
+	public boolean setSize(@IntRange(from=0) int newSize) {
+		if (newSize < itemSizePx) {
+			final String message = String.format("Size(%d) must be greater than view size(%d)", newSize, itemSizePx);
 			throw new IllegalArgumentException(message);
 		}
 
-		if (usersGroupsCount > 0) {
-			LogUtil.log(this, "setSize(height=%d)", height);
+		if (groupsCount != 0 && (size == null || newSize != size)) {
+			LogUtil.log(this, "setSize(oldSize=%d, newSize=%d)", size, newSize);
+			Integer oldSize = size;
+			this.size = newSize;
 
-			LogUtil.err(this, "----------- = [ %d ---------------", height);
-			logGroups();
-			updateGroupsPoses(height);
-			if (prevHeight == null || prevHeight > height) {
-				updateDistances();
-				composeByDistances(height);
+			if (oldSize == null || oldSize > newSize) {
+				doComposing();
 			} else {
-				breakByHistory(height);
+				doBreaking();
 			}
-			prevHeight = height;
-
-			logGroups();
 			return true;
 		}
 		return false;
 	}
 
+	protected void doComposing() {
+		updateGroupsPositions();
+		updateGroupsCandidates();
+		composeGroups();
+	}
 
-	private void updateGroupsPoses(int height) {
-		TreeNode node = usersGroupsRoot;
+	protected void doBreaking() {
+		updateGroupsPositions();
+		breakGroups();
+	}
+
+	protected void updateGroupsPositions() {
+		TreeNode node = groupsRoot;
 		int i = 0;
 		while (node != null) {
-			node.updateAbsolutePos(height);
+			node.updateAbsolutePos(size);
 			node = node.next;
 			++i;
 		}
-		Assert.assertSame(usersGroupsCount, i);
+		Assert.assertSame(groupsCount, i);
 	}
 
-	private void updateDistances() {
-		for (DistanceNode node : groupsDistances) {
+	private void updateGroupsCandidates() {
+		for (GroupCandidate node : groupsCandidates) {
 			node.updateIntersectingHeight();
 		}
-		Collections.sort(groupsDistances);
+		Collections.sort(groupsCandidates);
 	}
 
-
-	void logGroups() {
-		LogUtil.i(this, toTreeString());
-	}
-
-	boolean logged = false;
-	private void logDistances() {
-//		String str = String.format("%d = [ ", groupsDistances.size());
-//		for (DistanceNode currentNode : groupsDistances) {
-//			str = String.format("%s(%.5f: %s--%s) ", str, currentNode.distance, currentNode.from.mainUser.name, currentNode.to.mainUser.name);
-//		}
-//		LogUtil.i(this, "%s]", str);
-//
-//		str = String.format("^ %d = [ ", usersGroupsCount);
-//		TreeNode currentNode = usersGroupsRoot;
-//		while (currentNode != null) {
-//			str = String.format("%s(%s: %.5f) ", str, currentNode.mainUser.name, currentNode.posAbsolute);
-//			currentNode = currentNode.next;
-//		}
-//		LogUtil.log(this, "%s]", str);
-
-		/*str = String.format("^ %d = [ ", groupsDistances.size() - 1);
-		ListIterator<DistanceNode> iter = groupsDistances.listIterator();
-		DistanceNode prev = iter.next(), cur;
-		while (iter.hasNext()) {
-			cur = iter.next();
-			str = String.format("%s(%d: %s--%s <> %s--%s) ", str, prev.compareTo(cur),
-					prev.from.mainUser.name, prev.to.mainUser.name,
-					cur.from.mainUser.name, cur.to.mainUser.name);
-			prev = cur;
-		}
-		LogUtil.log(this, "%s]", str);*/
-	}
-
-	private void composeByDistances(int height) {
-		logged = false;
-		if (!groupsDistances.isEmpty()) {
-			DistanceNode first = groupsDistances.getFirst();
-			while (first.intersectingHeight >= height) {
-				if (!logged) {
-					//logged = true;
-					//logDistances();
-				}
-
-				TreeNode newNode = first.compose(height);
-				if (newNode.left == usersGroupsRoot) {
-					usersGroupsRoot = newNode;
+	private void composeGroups() {
+		if (!groupsCandidates.isEmpty()) {
+			GroupCandidate first = groupsCandidates.getFirst();
+			while (first.intersectingHeight >= size) {
+				TreeNode newNode = first.compose(size);
+				if (newNode.left == groupsRoot) {
+					groupsRoot = newNode;
 				}
 				groupsHistory.push(newNode);
-				usersGroupsCount--;
+				groupsCount--;
 
-				groupsDistances.removeFirst();
-				Collections.sort(groupsDistances);
+				groupsCandidates.removeFirst();
+				Collections.sort(groupsCandidates);
 
 				for (EventsListener listener : listeners) {
 					listener.onGroup(newNode.left, newNode.right, newNode);
 				}
 
-				if (groupsDistances.isEmpty()) {
+				if (groupsCandidates.isEmpty()) {
 					break;
 				} else {
-					first = groupsDistances.getFirst();
+					first = groupsCandidates.getFirst();
 				}
 			}
 		}
-		//logDistances();
 	}
 
-	private void breakByHistory(int height) {
+	private void breakGroups() {
 		while (!groupsHistory.isEmpty()) {
 			TreeNode node = groupsHistory.peek();
-			Float rightPos = node.right.calcAndGetAbsolutePos(height);
-			Float leftPos = node.left.calcAndGetAbsolutePos(height);
-			if (rightPos >= (leftPos + userViewHeightPx)) {
+			Float rightPos = node.right.calcAndGetAbsolutePos(size);
+			Float leftPos = node.left.calcAndGetAbsolutePos(size);
+			if (rightPos >= (leftPos + itemSizePx)) {
 				groupsHistory.pop();
 
 				node.breakNode();
@@ -195,12 +162,12 @@ public class GroupedList {
 				if (node.next != null) {
 					node.next.prev = node.right;
 				}
-				if (node == usersGroupsRoot) {
-					usersGroupsRoot = node.left;
+				if (node == groupsRoot) {
+					groupsRoot = node.left;
 				}
 
-				groupsDistances.add(new DistanceNode(userViewHeightPx, node.left, node.right));
-				++usersGroupsCount;
+				groupsCandidates.add(new GroupCandidate(itemSizePx, node.left, node.right));
+				++groupsCount;
 
 				for (EventsListener listener : listeners) {
 					listener.onBreak(node, node.left, node.right);
@@ -214,11 +181,11 @@ public class GroupedList {
 
 
 	public java.util.Iterator<TreeNode> getGroupsIterator() {
-		return new Iterator(usersGroupsRoot);
+		return new Iterator(groupsRoot);
 	}
 
 	public int getGroupsCount() {
-		return usersGroupsCount;
+		return groupsCount;
 	}
 
 	void innerLog(StringBuilder b, TreeNode node, boolean isLeft) {
@@ -235,9 +202,9 @@ public class GroupedList {
 
 	public String toTreeString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append(String.format("%d = [", usersGroupsCount));
+		builder.append(String.format("%d = [", groupsCount));
 
-		TreeNode node = usersGroupsRoot;
+		TreeNode node = groupsRoot;
 		while (node != null) {
 			innerLog(builder, node, false);
 			if (node.next != null) {

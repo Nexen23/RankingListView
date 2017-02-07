@@ -75,7 +75,7 @@ public class UsersView extends FrameLayout {
 
 	private void createOrRemoveGroupsViews() {
 		// Create
-		int childsCount = getChildCount(), groupsCount = groupedList.usersGroupsCount;
+		int childsCount = getChildCount(), groupsCount = groupedList.groupsCount;
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
@@ -87,10 +87,10 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void updateGroupsViews() {
-		Assert.assertSame(getChildCount(), groupedList.usersGroupsCount);
+		Assert.assertSame(getChildCount(), groupedList.groupsCount);
 
-		TreeNode group = groupedList.usersGroupsRoot;
-		for (int i = 0; i < groupedList.usersGroupsCount; ++i) {
+		TreeNode group = groupedList.groupsRoot;
+		for (int i = 0; i < groupedList.groupsCount; ++i) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 //			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 //			params.topMargin = group.posAbsolute.intValue();
