@@ -10,8 +10,8 @@ import junit.framework.Assert;
 import java.util.List;
 
 import alex.rankinglist.R;
-import alex.rankinglist.misc.GroupedList;
-import alex.rankinglist.misc.TreeNode;
+import alex.rankinglist.misc.grouping.GroupedList;
+import alex.rankinglist.misc.grouping.TreeNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;

@@ -1,4 +1,4 @@
-package alex.rankinglist.misc;
+package alex.rankinglist.misc.grouping;
 
 import android.support.annotation.Px;
 

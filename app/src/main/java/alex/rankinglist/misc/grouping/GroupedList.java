@@ -1,4 +1,4 @@
-package alex.rankinglist.misc;
+package alex.rankinglist.misc.grouping;
 
 
 import android.support.annotation.IntRange;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Stack;
 
+import alex.rankinglist.misc.EventsSource;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;

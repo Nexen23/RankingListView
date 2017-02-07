@@ -16,6 +16,8 @@ import java.util.ListIterator;
 import java.util.Stack;
 
 import alex.rankinglist.R;
+import alex.rankinglist.misc.grouping.GroupedList;
+import alex.rankinglist.misc.grouping.TreeNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
