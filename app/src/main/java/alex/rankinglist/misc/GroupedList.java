@@ -17,20 +17,18 @@ import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
 
-public class GroupedList {
-	private final @Px int itemSizePx;
-	private final float itemHalfSizePx;
+public class GroupedList extends EventsSource<GroupedList.EventsListener> {
+	private final @Px int itemSize;
 	private Integer size;
 
 	public TreeNode groupsRoot;
 	public int groupsCount = 0;
 
-	private LinkedList<GroupCandidate> groupsCandidates = new LinkedList<>();
+	private LinkedList<GroupCandidates> groupsCandidates = new LinkedList<>();
 	private Stack<TreeNode> groupsHistory = new Stack<>();
 
-	public GroupedList(@Px int itemSizePx) {
-		this.itemSizePx = itemSizePx;
-		itemHalfSizePx = itemSizePx / 2.0f;
+	public GroupedList(@Px int itemSize) {
+		this.itemSize = itemSize;
 	}
 
 	public void clearData() {
@@ -39,7 +37,7 @@ public class GroupedList {
 		groupsHistory = new Stack<>();
 		groupsCount = 0;
 		groupsRoot = null;
-		listeners.clear();
+		clearListeners();
 	}
 
 	public void setData(@NonNull Rank rank, @NonNull List<User> items) {
@@ -50,7 +48,7 @@ public class GroupedList {
 		if (!items.isEmpty()) {
 			LinkedList<TreeNode> usersGroups = new LinkedList<>();
 			for (User item : items) {
-				usersGroups.add(new TreeNode(itemSizePx, rank, item));
+				usersGroups.add(new TreeNode(itemSize, rank, item));
 			}
 			Collections.sort(usersGroups);
 			groupsCount = usersGroups.size();
@@ -63,15 +61,16 @@ public class GroupedList {
 				curNode = iter.next();
 				prevNode.next = curNode;
 				curNode.prev = prevNode;
-				groupsCandidates.add(new GroupCandidate(itemSizePx, prevNode, curNode));
+				groupsCandidates.add(new GroupCandidates(itemSize, prevNode, curNode));
 				prevNode = curNode;
 			}
+			Collections.sort(groupsCandidates);
 		}
 	}
 
 	public boolean setSize(@IntRange(from=0) int newSize) {
-		if (newSize < itemSizePx) {
-			final String message = String.format("Size(%d) must be greater than view size(%d)", newSize, itemSizePx);
+		if (newSize < itemSize) {
+			final String message = String.format("Size(%d) must be greater than view size(%d)", newSize, itemSize);
 			throw new IllegalArgumentException(message);
 		}
 
@@ -92,7 +91,6 @@ public class GroupedList {
 
 	protected void doComposing() {
 		updateGroupsPositions();
-		updateGroupsCandidates();
 		composeGroups();
 	}
 
@@ -112,17 +110,10 @@ public class GroupedList {
 		Assert.assertSame(groupsCount, i);
 	}
 
-	private void updateGroupsCandidates() {
-		for (GroupCandidate node : groupsCandidates) {
-			node.updateIntersectingHeight();
-		}
-		Collections.sort(groupsCandidates);
-	}
-
 	private void composeGroups() {
 		if (!groupsCandidates.isEmpty()) {
-			GroupCandidate first = groupsCandidates.getFirst();
-			while (first.intersectingHeight >= size) {
+			GroupCandidates first = groupsCandidates.getFirst();
+			while (first.getIntersectingSize() >= size) {
 				TreeNode newNode = first.compose(size);
 				if (newNode.left == groupsRoot) {
 					groupsRoot = newNode;
@@ -133,9 +124,13 @@ public class GroupedList {
 				groupsCandidates.removeFirst();
 				Collections.sort(groupsCandidates);
 
-				for (EventsListener listener : listeners) {
-					listener.onGroup(newNode.left, newNode.right, newNode);
-				}
+				final TreeNode constNode = newNode;
+				forEachListener(new Actor<EventsListener>() {
+					@Override
+					public void actOn(EventsListener listener) {
+						listener.onGroup(constNode.left, constNode.right, constNode);
+					}
+				});
 
 				if (groupsCandidates.isEmpty()) {
 					break;
@@ -151,7 +146,7 @@ public class GroupedList {
 			TreeNode node = groupsHistory.peek();
 			Float rightPos = node.right.calcAndGetAbsolutePos(size);
 			Float leftPos = node.left.calcAndGetAbsolutePos(size);
-			if (rightPos >= (leftPos + itemSizePx)) {
+			if (rightPos >= (leftPos + itemSize)) {
 				groupsHistory.pop();
 
 				node.breakNode();
@@ -166,15 +161,20 @@ public class GroupedList {
 					groupsRoot = node.left;
 				}
 
-				groupsCandidates.add(new GroupCandidate(itemSizePx, node.left, node.right));
+				groupsCandidates.add(new GroupCandidates(itemSize, node.left, node.right));
 				++groupsCount;
 
-				for (EventsListener listener : listeners) {
-					listener.onBreak(node, node.left, node.right);
-				}
+				final TreeNode constNode = node;
+				forEachListener(new Actor<EventsListener>() {
+					@Override
+					public void actOn(EventsListener listener) {
+						listener.onBreak(constNode, constNode.left, constNode.right);
+					}
+				});
 			} else {
 				break;
 			}
+			Collections.sort(groupsCandidates);
 		}
 	}
 
@@ -218,25 +218,11 @@ public class GroupedList {
 		return builder.toString();
 	}
 
-	private List<EventsListener> listeners = new LinkedList<>();
-
-	public void addListener(EventsListener listener) {
-		listeners.add(listener);
-	}
-
-	public void removeListener(EventsListener listener) {
-		listeners.remove(listener);
-	}
-
-
-	/*public class Group<T> {
-
-	}
 
 	private class TwoWayNode<T> {
 		private TwoWayNode<T> prev, next;
 		private T data;
-	}*/
+	}
 
 	private class Iterator implements java.util.Iterator<TreeNode> {
 		private TreeNode currentNode;

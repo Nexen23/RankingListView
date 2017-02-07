@@ -41,8 +41,8 @@ public class TreeNode implements Comparable<TreeNode> {
 		mainUser = left.mainUser;
 		groupSize = left.groupSize + right.groupSize;
 
-		final boolean leftIsBorder = left.isLeftBorder((float) height),
-				rightIsBorder = right.isRightBorder((float) height);
+		final boolean leftIsBorder = left.isLeftBorderWhen((float) height),
+				rightIsBorder = right.isRightBorderWhen((float) height);
 		// FIXME: 04.02.2017 relativePoses can be equal
 		final int wouldIntersectWhenHeight = (int) (userViewHeightPx / (right.posRelative - left.posRelative));
 
@@ -160,11 +160,11 @@ public class TreeNode implements Comparable<TreeNode> {
 		posRelative = relative;
 	}
 
-	public boolean isLeftBorder(Float height) {
+	public boolean isLeftBorderWhen(Float height) {
 		return height <= heightToLeftBorder;
 	}
 
-	public boolean isRightBorder(Float height) {
+	public boolean isRightBorderWhen(Float height) {
 		return height <= heightToRightBorder;
 	}
 
