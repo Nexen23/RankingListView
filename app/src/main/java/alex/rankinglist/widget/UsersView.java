@@ -50,7 +50,7 @@ public class UsersView extends FrameLayout {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		LogUtil.log(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
-		if (groupedList.setSize(h)) {
+		if (groupedList.setSpace(h)) {
 			createOrRemoveGroupsViews();
 			updateGroupsViews();
 
@@ -75,7 +75,7 @@ public class UsersView extends FrameLayout {
 
 	private void createOrRemoveGroupsViews() {
 		// Create
-		int childsCount = getChildCount(), groupsCount = groupedList.groupsCount;
+		int childsCount = getChildCount(), groupsCount = groupedList.getGroupsCount();
 		for (int i = childsCount; i < groupsCount; ++i) {
 			addView(new UsersGroupView(getContext()));
 		}
@@ -87,10 +87,10 @@ public class UsersView extends FrameLayout {
 	}
 
 	private void updateGroupsViews() {
-		Assert.assertSame(getChildCount(), groupedList.groupsCount);
+		Assert.assertSame(getChildCount(), groupedList.getGroupsCount());
 
-		Group group = groupedList.groupsRoot;
-		for (int i = 0; i < groupedList.groupsCount; ++i) {
+		int i = 0;
+		for (Group group : groupedList) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 //			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 //			params.topMargin = group.posAbsolute.intValue();
@@ -103,7 +103,7 @@ public class UsersView extends FrameLayout {
 				child.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
 			}
 
-			group = group.next;
+			++i;
 		}
 	}
 }

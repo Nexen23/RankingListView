@@ -48,10 +48,10 @@ public class GroupedListTest {
 	@Test
 	public void setData_callsAreIndependent() {
 		groupedList.setData(rank, users(10, 70));
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		groupedList.setData(rank, users(30, 40));
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(350);
 	}
@@ -67,7 +67,7 @@ public class GroupedListTest {
 	public void setData_viewNotExceedMinBound() {
 		groupedList.setData(rank, users(5));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(leftBorderPos());
 	}
@@ -76,7 +76,7 @@ public class GroupedListTest {
 	public void setData_viewNotExceedMaxBound() {
 		groupedList.setData(rank, users(95));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(rightBorderPos(1000));
 	}
@@ -87,7 +87,7 @@ public class GroupedListTest {
 		final int size = 1000;
 		groupedList.setData(rank, users(score));
 
-		groupedList.setSize(size);
+		groupedList.setSpace(size);
 
 		assertSingleGroupIsLocated(score / 100.0f * size);
 	}
@@ -95,93 +95,93 @@ public class GroupedListTest {
 
 	//region Compose groups
 	@Test
-	public void setSize_singleUserStaysUnchanged() {
+	public void setSpace_singleUserStaysUnchanged() {
 		groupedList.setData(rank, users(30));
 
-		groupedList.setSize(1000);
-		groupedList.setSize(200);
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
+		groupedList.setSpace(200);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(300);
 		assertGroupsTreeIs("1 = [0]");
 	}
 
 	@Test
-	public void setSize_group2UsersNearTheCenter() {
+	public void setSpace_group2UsersNearTheCenter() {
 		groupedList.setData(rank, users(30, 40));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(350);
 	}
 
 	@Test
-	public void setSize_group2UsersNearTheMinBound() {
+	public void setSpace_group2UsersNearTheMinBound() {
 		groupedList.setData(rank, users(6, 14));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(100);
 	}
 
 	@Test
-	public void setSize_group2UsersNearTheMaxBound() {
+	public void setSpace_group2UsersNearTheMaxBound() {
 		groupedList.setData(rank, users(86, 94));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertSingleGroupIsLocated(900);
 	}
 
 	@Test
-	public void setSize_group2UsersNearTheBounds() {
+	public void setSpace_group2UsersNearTheBounds() {
 		groupedList.setData(rank, users(0, 100));
 
-		groupedList.setSize(200);
+		groupedList.setSpace(200);
 
 		assertSingleGroupIsLocated(100);
 	}
 
 	@Test
-	public void setSize_groupUsersWithSameScore() {
+	public void setSpace_groupUsersWithSameScore() {
 		groupedList.setData(rank, users(33, 33, 40, 40));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
 	}
 
 	@Test
-	public void setSize_groupRandomUsers() {
+	public void setSpace_groupRandomUsers() {
 		groupedList.setData(rank, users(17, 25, 33, 51, 52));
 
-		groupedList.setSize(500);
+		groupedList.setSpace(500);
 
 		assertGroupsTreeIs("2 = [{{0, 1}, 2} + {3, 4}]");
 	}
 
 	@Test
-	public void setSize_groupManyUsersNearTheBounds() {
+	public void setSpace_groupManyUsersNearTheBounds() {
 		groupedList.setData(rank, users(0, 2, 18, 33, 45, 71, 77, 89, 99, 100));
 
-		groupedList.setSize(210);
+		groupedList.setSpace(210);
 
 		assertGroupsTreeIs("1 = [{{{{0, 1}, 2}, {3, 4}}, {{5, 6}, {7, {8, 9}}}}]");
 	}
 
 	@Test
-	public void setSize_throwsIfNotEnoughPlaceForAnyUser() {
+	public void setSpace_throwsIfNotEnoughPlaceForAnyUser() {
 		groupedList.setData(rank, users(10, 90));
 
 		exception.expect(isA(IllegalArgumentException.class));
-		groupedList.setSize(100);
+		groupedList.setSpace(100);
 	}
 
 	@Test
-	public void setSize_notIntersectedUsersAreNotGrouped() {
+	public void setSpace_notIntersectedUsersAreNotGrouped() {
 		groupedList.setData(rank, users(10, 21, 32, 43, 54, 65, 76, 87));
 
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
 
 		assertGroupsTreeIs("8 = [0 + 1 + 2 + 3 + 4 + 5 + 6 + 7]");
 	}
@@ -189,64 +189,64 @@ public class GroupedListTest {
 
 	//region Break groups
 	@Test
-	public void setSize_breakGroupNearTheCenter() {
+	public void setSpace_breakGroupNearTheCenter() {
 		groupedList.setData(rank, users(30, 40));
 
-		groupedList.setSize(10_000);
-		groupedList.setSize(1_000);
-		groupedList.setSize(10_000);
+		groupedList.setSpace(10_000);
+		groupedList.setSpace(1_000);
+		groupedList.setSpace(10_000);
 
 		assertGroupsTreeIs("2 = [0 + 1]");
 	}
 
 	@Test
-	public void setSize_breakGroupNearTheMinBound() {
+	public void setSpace_breakGroupNearTheMinBound() {
 		groupedList.setData(rank, users(6, 14));
 
-		groupedList.setSize(10_000);
-		groupedList.setSize(1_000);
-		groupedList.setSize(10_000);
+		groupedList.setSpace(10_000);
+		groupedList.setSpace(1_000);
+		groupedList.setSpace(10_000);
 
 		assertGroupsTreeIs("2 = [0 + 1]");
 	}
 
 	@Test
-	public void setSize_breakGroupNearTheMaxBound() {
+	public void setSpace_breakGroupNearTheMaxBound() {
 		groupedList.setData(rank, users(86, 94));
 
-		groupedList.setSize(10_000);
-		groupedList.setSize(1_000);
-		groupedList.setSize(10_000);
+		groupedList.setSpace(10_000);
+		groupedList.setSpace(1_000);
+		groupedList.setSpace(10_000);
 
 		assertGroupsTreeIs("2 = [0 + 1]");
 	}
 
 	@Test
-	public void setSize_breakGroupNearTheBounds() {
+	public void setSpace_breakGroupNearTheBounds() {
 		groupedList.setData(rank, users(0, 100));
 
-		groupedList.setSize(1000);
-		groupedList.setSize(200);
-		groupedList.setSize(1000);
+		groupedList.setSpace(1000);
+		groupedList.setSpace(200);
+		groupedList.setSpace(1000);
 
 		assertGroupsTreeIs("2 = [0 + 1]");
 	}
 
 	@Test
-	public void setSize_groupWithUsersWithSameScoreShouldNotBreak() {
+	public void setSpace_groupWithUsersWithSameScoreShouldNotBreak() {
 		groupedList.setData(rank, users(33, 44, 33, 44));
 
-		groupedList.setSize(50_000);
+		groupedList.setSpace(50_000);
 
 		assertGroupsTreeIs("2 = [{0, 2} + {1, 3}]");
 	}
 
 	@Test
-	public void setSize_breakRandomGroups() {
+	public void setSpace_breakRandomGroups() {
 		groupedList.setData(rank, users(17, 25, 33, 51, 52));
 
-		groupedList.setSize(200);
-		groupedList.setSize(50_000);
+		groupedList.setSpace(200);
+		groupedList.setSpace(50_000);
 
 		assertGroupsTreeIs("5 = [0 + 1 + 2 + 3 + 4]");
 	}
@@ -254,27 +254,27 @@ public class GroupedListTest {
 
 	//region Order of groups composing and breaking
 	@Test
-	public void setSize_groupUsersInCorrectOrderNearTheMinBound() {
+	public void setSpace_groupUsersInCorrectOrderNearTheMinBound() {
 		groupedList.setData(rank, users(0, 5, 10, 15));
 
-		groupedList.setSize(225);
+		groupedList.setSpace(225);
 
 		assertSingleGroupIsLocated(leftBorderPos());
 		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
 	}
 
 	@Test
-	public void setSize_groupUsersInCorrectOrderNearTheMaxBound() {
+	public void setSpace_groupUsersInCorrectOrderNearTheMaxBound() {
 		groupedList.setData(rank, users(85, 90, 95, 100));
 
-		groupedList.setSize(225);
+		groupedList.setSpace(225);
 
 		assertSingleGroupIsLocated(rightBorderPos(225));
 		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
 	}
 
 	@Test
-	public void setSize_breakGroupsShouldBeInReverseOrderOfComposing() {
+	public void setSpace_breakGroupsShouldBeInReverseOrderOfComposing() {
 		final Stack<Pair<Group, Group>> groups = new Stack<>();
 		groupedList.addListener(new GroupedList.EventsListener() {
 			@Override
@@ -287,7 +287,7 @@ public class GroupedListTest {
 				final Pair<Group, Group> lastGroup = groups.pop();
 				if (lastGroup.first != a || lastGroup.second != b) {
 					String message = String.format("Broken group of User(%s) & User(%s)\n--should be composed of User(%s) & User(%s)",
-							removedGroup.getLeft().getData().name, removedGroup.getRight().getData().name,
+							removedGroup.getLeftNode().getData().name, removedGroup.getRightNode().getData().name,
 							a.getData().name, b.getData().name);
 					throw new IllegalStateException(message);
 				}
@@ -296,12 +296,12 @@ public class GroupedListTest {
 
 		groupedList.setData(rank, users(17, 25, 33, 51, 52));
 
-		groupedList.setSize(200);
-		groupedList.setSize(10_000);
+		groupedList.setSpace(200);
+		groupedList.setSpace(10_000);
 	}
 
 	@Test
-	public void setSize_regroupingAfterBreakingShouldBeInTheSameOrderWithAnySpeed() {
+	public void setSpace_regroupingAfterBreakingShouldBeInTheSameOrderWithAnySpeed() {
 		final LinkedList<Group> groupsHistory = new LinkedList<>();
 		final Wrapper<ListIterator<Group>> iterator = Wrapper.wrap(groupsHistory.listIterator());
 		groupedList.addListener(new GroupedList.EventsListener() {
@@ -317,8 +317,8 @@ public class GroupedListTest {
 					Group expectedGroup = iterator.data.next();
 					if (!composedGroup.equals(expectedGroup)) {
 						String message = String.format("Composed group of User(%s) & User(%s)\n--was previously composed of User(%s) & User(%s)",
-								composedGroup.getLeft().getData().name, composedGroup.getRight().getData().name,
-								expectedGroup.getLeft().getData().name, expectedGroup.getRight().getData().name);
+								composedGroup.getLeftNode().getData().name, composedGroup.getRightNode().getData().name,
+								expectedGroup.getLeftNode().getData().name, expectedGroup.getRightNode().getData().name);
 						composedGroup.equals(expectedGroup);
 						throw new IllegalStateException(message);
 					}
@@ -341,11 +341,11 @@ public class GroupedListTest {
 		groupedList.setData(rank, users(0, 17, 25, 33, 51, 52, 55, 57, 61, 69, 70, 80, 95, 98, 100));
 
 		// Fast zoom out
-		groupedList.setSize(200);
+		groupedList.setSpace(200);
 
 		// Slow zoom out
 		for (int size = 10_000; size >= 200; size -= 200) {
-			groupedList.setSize(size);
+			groupedList.setSpace(size);
 		}
 
 		assertGroupsTreeIs("1 = [{{0, {{1, 2}, 3}}, {{{{4, 5}, {6, 7}}, 8}, {{{9, 10}, 11}, {12, {13, 14}}}}}]");
@@ -355,12 +355,12 @@ public class GroupedListTest {
 	//region Helpers
 	private void assertSingleGroupIsLocated(float viewCenterPosPx) {
 		assertThat(groupedList.getGroupsCount(), is(1));
-		assertThat(groupedList.getGroupsIterator().hasNext(), is(true));
-		assertThat(groupedList.getGroupsIterator().next().getCenterPosPx(groupedList.getSize()), closeTo(viewCenterPosPx, DELTA));
+		assertThat(groupedList.iterator().hasNext(), is(true));
+		assertThat(groupedList.iterator().next().getCenterPosPx(groupedList.getSpace()), closeTo(viewCenterPosPx, DELTA));
 	}
 
 	private void assertGroupsTreeIs(String treeString) {
-		assertThat(groupedList.toTreeString(), is(treeString));
+		assertThat(groupedList.toString(), is(treeString));
 	}
 
 	private User user(float invertedScore, String name) {

@@ -13,21 +13,14 @@ public class Group extends EventsSource<Group.OnParentUpdate> implements Compara
 	private final @Px int itemSize;
 	private final float itemHalfSize;
 
-	public @FloatRange(from=0, to=1) Float normalizedPos;
+	private @FloatRange(from=0, to=1) Float normalizedPos;
 	private Float sizeToLeftBorder, sizeToRightBorder;
 
 	private @IntRange(from=1) int itemsCount;
 	private Group left, right;
 	private User data;
 
-
-
-
-
-
-	public Group prev, next; // for lists moving and updating
-
-
+	Group prev, next;
 
 	public Group(@Px int itemSize, float size, Group left, Group right) {
 		this.itemSize = itemSize;
@@ -115,12 +108,16 @@ public class Group extends EventsSource<Group.OnParentUpdate> implements Compara
 		return MathUtil.InRange(centeredPosFromTopPx, 0, size - itemSize);
 	}
 
-	public Group getLeft() {
+	public Group getLeftNode() {
 		return left;
 	}
 
-	public Group getRight() {
+	public Group getRightNode() {
 		return right;
+	}
+
+	public Float getNormalizedPos() {
+		return normalizedPos;
 	}
 
 	public boolean isLeaf() {
@@ -173,4 +170,6 @@ public class Group extends EventsSource<Group.OnParentUpdate> implements Compara
 		void parentSetFor(Group node, Group parent);
 		void breakNode(Group node);
 	}
+
+
 }

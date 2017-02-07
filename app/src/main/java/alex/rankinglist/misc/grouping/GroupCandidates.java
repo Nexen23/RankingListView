@@ -49,10 +49,10 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 	public void breakNode(Group node) {
 		node.removeListener(this);
 		if (node == left) {
-			left = node.getRight();
+			left = node.getRightNode();
 			left.addListener(this);
 		} else {
-			right = node.getLeft();
+			right = node.getLeftNode();
 			right.addListener(this);
 		}
 		updateIntersectingSize();
@@ -66,7 +66,8 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 			return intersectingSizeComparison;
 		} else {
 			final int relativePosesComparison =
-					MathUtil.Compare(a.right.normalizedPos - a.left.normalizedPos, b.right.normalizedPos - b.left.normalizedPos);
+					MathUtil.Compare(a.right.getNormalizedPos() - a.left.getNormalizedPos(),
+							b.right.getNormalizedPos() - b.left.getNormalizedPos());
 			if (relativePosesComparison != 0) {
 				return relativePosesComparison;
 			 } else {
@@ -80,18 +81,18 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 		final Float height = calcIntersectingSizeWithNoBound();
 		final boolean leftIsBorder = left.isLeftBorderWhen(height), rightIsBorder = right.isRightBorderWhen(height);
 
-		if (!leftIsBorder && !rightIsBorder) { // general intersect of non borders
+		if (!leftIsBorder && !rightIsBorder) {
 			intersectingSize = height;
 			return;
 		}
 
 		if (leftIsBorder && !rightIsBorder) {
-			intersectingSize = (itemSize + itemHalfSize) / right.normalizedPos;
+			intersectingSize = (itemSize + itemHalfSize) / right.getNormalizedPos();
 			return;
 		}
 
 		if (!leftIsBorder && rightIsBorder) {
-			intersectingSize = (itemSize + itemHalfSize) / (1 - left.normalizedPos);
+			intersectingSize = (itemSize + itemHalfSize) / (1 - left.getNormalizedPos());
 			return;
 		}
 
@@ -104,6 +105,6 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 	}
 
 	private Float calcIntersectingSizeWithNoBound() {
-		return itemSize / (right.normalizedPos - left.normalizedPos);
+		return itemSize / (right.getNormalizedPos() - left.getNormalizedPos());
 	}
 }
