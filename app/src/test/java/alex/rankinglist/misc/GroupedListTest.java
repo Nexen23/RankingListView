@@ -146,7 +146,7 @@ public class GroupedListTest {
 
 		groupedList.setSize(1000);
 
-		assertGroupsTreeIs("1 = [{{0, 1} + {2, 3}}]");
+		assertGroupsTreeIs("1 = [{{0, 1}, {2, 3}}]");
 	}
 
 	@Test
@@ -194,7 +194,7 @@ public class GroupedListTest {
 		groupedList.setSize(1_000);
 		groupedList.setSize(10_000);
 
-		assertGroupsTreeIs("2 = [{0 + 1}]");
+		assertGroupsTreeIs("2 = [0 + 1]");
 	}
 
 	@Test
@@ -231,7 +231,7 @@ public class GroupedListTest {
 	}
 
 	@Test
-	public void setSize_usersWithSameScoreShouldAlwaysBeInGroup() {
+	public void setSize_groupWithUsersWithSameScoreShouldNotBreak() {
 		groupedList.setData(rank, users(33, 44, 33, 44));
 
 		groupedList.setSize(50_000);
@@ -359,7 +359,6 @@ public class GroupedListTest {
 	private void assertGroupsTreeIs(String treeString) {
 		assertThat(groupedList.toTreeString(), is(treeString));
 	}
-
 
 	private User user(float invertedScore, String name) {
 		return new User(name, 100 - invertedScore);

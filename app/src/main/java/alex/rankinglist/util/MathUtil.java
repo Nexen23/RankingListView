@@ -11,10 +11,10 @@ public class MathUtil {
 	}
 
 	public static boolean IsEqual(Float a, Float b) {
-		return Math.abs(a - b) < EPSILON;
+		return Math.abs(a - b) < EPSILON || (a.isInfinite() && b.isInfinite());
 	}
 
-	public static int Compare(float a, float b) {
+	public static int Compare(Float a, Float b) {
 		if (IsEqual(a, b)) {
 			return 0;
 		} else {
