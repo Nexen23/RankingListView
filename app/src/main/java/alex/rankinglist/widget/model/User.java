@@ -13,22 +13,8 @@ public class User {
 		this.score = score;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		User user = (User) o;
-
-		if (Float.compare(user.score, score) != 0) return false;
-		return name.equals(user.name);
-
+	@Override public String toString() {
+		return String.format("%s[name=%s, score=%.2f]", getClass().getSimpleName(), name, score);
 	}
 
-	@Override
-	public int hashCode() {
-		int result = name.hashCode();
-		result = 31 * result + (score != +0.0f ? Float.floatToIntBits(score) : 0);
-		return result;
-	}
 }

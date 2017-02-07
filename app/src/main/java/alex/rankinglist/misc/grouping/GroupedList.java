@@ -22,11 +22,11 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 	private final @Px int itemSize;
 	private Integer size;
 
-	public TreeNode groupsRoot;
+	public Group groupsRoot;
 	public int groupsCount = 0;
 
 	private LinkedList<GroupCandidates> groupsCandidates = new LinkedList<>();
-	private Stack<TreeNode> groupsHistory = new Stack<>();
+	private Stack<Group> groupsHistory = new Stack<>();
 
 	public GroupedList(@Px int itemSize) {
 		this.itemSize = itemSize;
@@ -34,8 +34,8 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 
 	public void clearData() {
 		size = null;
-		groupsCandidates = new LinkedList<>();
-		groupsHistory = new Stack<>();
+		groupsCandidates.clear();
+		groupsHistory.clear();
 		groupsCount = 0;
 		groupsRoot = null;
 		clearListeners();
@@ -47,16 +47,16 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		}
 
 		if (!items.isEmpty()) {
-			LinkedList<TreeNode> usersGroups = new LinkedList<>();
+			LinkedList<Group> usersGroups = new LinkedList<>();
 			for (User item : items) {
-				usersGroups.add(new TreeNode(itemSize, rank, item));
+				usersGroups.add(new Group(itemSize, rank, item));
 			}
 			Collections.sort(usersGroups);
 			groupsCount = usersGroups.size();
 
 			groupsCandidates.clear();
-			ListIterator<TreeNode> iter = usersGroups.listIterator();
-			TreeNode prevNode = iter.next(), curNode;
+			ListIterator<Group> iter = usersGroups.listIterator();
+			Group prevNode = iter.next(), curNode;
 			groupsRoot = prevNode;
 			while (iter.hasNext()) {
 				curNode = iter.next();
@@ -91,20 +91,17 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 	}
 
 	protected void doComposing() {
-		updateGroupsPositions();
 		composeGroups();
 	}
 
 	protected void doBreaking() {
-		updateGroupsPositions();
 		breakGroups();
 	}
 
 	protected void updateGroupsPositions() {
-		TreeNode node = groupsRoot;
+		Group node = groupsRoot;
 		int i = 0;
 		while (node != null) {
-			node.updateAbsolutePos(size);
 			node = node.next;
 			++i;
 		}
@@ -115,8 +112,8 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		if (!groupsCandidates.isEmpty()) {
 			GroupCandidates first = groupsCandidates.getFirst();
 			while (first.getIntersectingSize() >= size) {
-				TreeNode newNode = first.compose(size);
-				if (newNode.left == groupsRoot) {
+				Group newNode = first.compose();
+				if (newNode.getLeft() == groupsRoot) {
 					groupsRoot = newNode;
 				}
 				groupsHistory.push(newNode);
@@ -125,11 +122,11 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 				groupsCandidates.removeFirst();
 				Collections.sort(groupsCandidates);
 
-				final TreeNode constNode = newNode;
+				final Group constNode = newNode;
 				forEachListener(new Actor<EventsListener>() {
 					@Override
 					public void actOn(EventsListener listener) {
-						listener.onGroup(constNode.left, constNode.right, constNode);
+						listener.onGroup(constNode.getLeft(), constNode.getRight(), constNode);
 					}
 				});
 
@@ -144,32 +141,32 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 
 	private void breakGroups() {
 		while (!groupsHistory.isEmpty()) {
-			TreeNode node = groupsHistory.peek();
-			Float rightPos = node.right.calcAndGetAbsolutePos(size);
-			Float leftPos = node.left.calcAndGetAbsolutePos(size);
+			Group node = groupsHistory.peek();
+			Float rightPos = node.getRight().getAbsolutePos(size);
+			Float leftPos = node.getLeft().getAbsolutePos(size);
 			if (rightPos >= (leftPos + itemSize)) {
 				groupsHistory.pop();
 
 				node.breakNode();
 
 				if (node.prev != null) {
-					node.prev.next = node.left;
+					node.prev.next = node.getLeft();
 				}
 				if (node.next != null) {
-					node.next.prev = node.right;
+					node.next.prev = node.getRight();
 				}
 				if (node == groupsRoot) {
-					groupsRoot = node.left;
+					groupsRoot = node.getLeft();
 				}
 
-				groupsCandidates.add(new GroupCandidates(itemSize, node.left, node.right));
+				groupsCandidates.add(new GroupCandidates(itemSize, node.getLeft(), node.getRight()));
 				++groupsCount;
 
-				final TreeNode constNode = node;
+				final Group constNode = node;
 				forEachListener(new Actor<EventsListener>() {
 					@Override
 					public void actOn(EventsListener listener) {
-						listener.onBreak(constNode, constNode.left, constNode.right);
+						listener.onBreak(constNode, constNode.getLeft(), constNode.getRight());
 					}
 				});
 			} else {
@@ -179,9 +176,11 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		}
 	}
 
+	public Integer getSize() {
+		return size;
+	}
 
-
-	public java.util.Iterator<TreeNode> getGroupsIterator() {
+	public java.util.Iterator<Group> getGroupsIterator() {
 		return new Iterator(groupsRoot);
 	}
 
@@ -189,15 +188,15 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		return groupsCount;
 	}
 
-	void innerLog(StringBuilder b, TreeNode node, boolean isLeft) {
-		if (node.left != null) {
+	void innerLog(StringBuilder b, Group node, boolean isLeft) {
+		if (node.getLeft() != null) {
 			b.append('{');
-			innerLog(b, node.left, true);
+			innerLog(b, node.getLeft(), true);
 			b.append(", ");
-			innerLog(b, node.right, false);
+			innerLog(b, node.getRight(), false);
 			b.append('}');
 		} else {
-			b.append(String.format("%s", node.mainUser.name));
+			b.append(String.format("%s", node.getData().name));
 		}
 	}
 
@@ -205,7 +204,7 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("%d = [", groupsCount));
 
-		TreeNode node = groupsRoot;
+		Group node = groupsRoot;
 		while (node != null) {
 			innerLog(builder, node, false);
 			if (node.next != null) {
@@ -220,15 +219,10 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 	}
 
 
-	private class TwoWayNode<T> {
-		private TwoWayNode<T> prev, next;
-		private T data;
-	}
+	private class Iterator implements java.util.Iterator<Group> {
+		private Group currentNode;
 
-	private class Iterator implements java.util.Iterator<TreeNode> {
-		private TreeNode currentNode;
-
-		public Iterator(TreeNode rootNode) {
+		public Iterator(Group rootNode) {
 			this.currentNode = rootNode;
 		}
 
@@ -238,15 +232,15 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> {
 		}
 
 		@Override
-		public TreeNode next() {
-			TreeNode prevNode = currentNode;
+		public Group next() {
+			Group prevNode = currentNode;
 			currentNode = currentNode.next;
 			return prevNode;
 		}
 	}
 
 	public interface EventsListener {
-		void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup);
-		void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b);
+		void onGroup(Group a, Group b, Group composedGroup);
+		void onBreak(Group removedGroup, Group a, Group b);
 	}
 }

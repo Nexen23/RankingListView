@@ -11,7 +11,7 @@ import java.util.List;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupedList;
-import alex.rankinglist.misc.grouping.TreeNode;
+import alex.rankinglist.misc.grouping.Group;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
@@ -89,25 +89,21 @@ public class UsersView extends FrameLayout {
 	private void updateGroupsViews() {
 		Assert.assertSame(getChildCount(), groupedList.groupsCount);
 
-		TreeNode group = groupedList.groupsRoot;
+		Group group = groupedList.groupsRoot;
 		for (int i = 0; i < groupedList.groupsCount; ++i) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 //			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 //			params.topMargin = group.posAbsolute.intValue();
 //			child.setLayoutParams(params);
-			child.setY(group.posAbsolute.intValue());
+			child.setY(group.getAbsolutePos(getHeight()));
 
 			if (group.isLeaf()) {
-				child.setModel(group.mainUser);
+				child.setModel(group.getData());
 			} else {
-				child.setModel(group.mainUser, group.groupSize, calcScoreByRelativePos(group.posRelative));
+				child.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
 			}
 
 			group = group.next;
 		}
-	}
-
-	private float calcScoreByRelativePos(float relativePos) {
-		return (rank.scoreMax - rank.scoreMin) * (1 - relativePos) + rank.scoreMin;
 	}
 }

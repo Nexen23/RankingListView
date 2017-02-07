@@ -20,7 +20,8 @@ public class EventsSource<Listener> {
 	}
 
 	public void forEachListener(Actor<Listener> actor) {
-		for (Listener listener : listeners) {
+		final LinkedList<Listener> listenersClone = new LinkedList<>(listeners);
+		for (Listener listener : listenersClone) {
 			actor.actOn(listener);
 		}
 	}

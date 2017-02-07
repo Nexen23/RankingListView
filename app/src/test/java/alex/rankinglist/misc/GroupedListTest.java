@@ -17,7 +17,7 @@ import java.util.Stack;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupedList;
-import alex.rankinglist.misc.grouping.TreeNode;
+import alex.rankinglist.misc.grouping.Group;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -275,20 +275,20 @@ public class GroupedListTest {
 
 	@Test
 	public void setSize_breakGroupsShouldBeInReverseOrderOfComposing() {
-		final Stack<Pair<TreeNode, TreeNode>> groups = new Stack<>();
+		final Stack<Pair<Group, Group>> groups = new Stack<>();
 		groupedList.addListener(new GroupedList.EventsListener() {
 			@Override
-			public void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup) {
+			public void onGroup(Group a, Group b, Group composedGroup) {
 				groups.push(Pair.create(a, b));
 			}
 
 			@Override
-			public void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b) {
-				final Pair<TreeNode, TreeNode> lastGroup = groups.pop();
+			public void onBreak(Group removedGroup, Group a, Group b) {
+				final Pair<Group, Group> lastGroup = groups.pop();
 				if (lastGroup.first != a || lastGroup.second != b) {
 					String message = String.format("Broken group of User(%s) & User(%s)\n--should be composed of User(%s) & User(%s)",
-							removedGroup.left.mainUser.name, removedGroup.right.mainUser.name,
-							a.mainUser.name, b.mainUser.name);
+							removedGroup.getLeft().getData().name, removedGroup.getRight().getData().name,
+							a.getData().name, b.getData().name);
 					throw new IllegalStateException(message);
 				}
 			}
@@ -302,23 +302,23 @@ public class GroupedListTest {
 
 	@Test
 	public void setSize_regroupingAfterBreakingShouldBeInTheSameOrderWithAnySpeed() {
-		final LinkedList<TreeNode> groupsHistory = new LinkedList<>();
-		final Wrapper<ListIterator<TreeNode>> iterator = Wrapper.wrap(groupsHistory.listIterator());
+		final LinkedList<Group> groupsHistory = new LinkedList<>();
+		final Wrapper<ListIterator<Group>> iterator = Wrapper.wrap(groupsHistory.listIterator());
 		groupedList.addListener(new GroupedList.EventsListener() {
 			boolean isDirectionForward = true;
 
 			@Override
-			public void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup) {
+			public void onGroup(Group a, Group b, Group composedGroup) {
 				if (!isDirectionForward) {
 					iterator.data.next();
 					isDirectionForward = true;
 				}
 				if (iterator.data.hasNext()) {
-					TreeNode expectedGroup = iterator.data.next();
+					Group expectedGroup = iterator.data.next();
 					if (!composedGroup.equals(expectedGroup)) {
 						String message = String.format("Composed group of User(%s) & User(%s)\n--was previously composed of User(%s) & User(%s)",
-								composedGroup.left.mainUser.name, composedGroup.right.mainUser.name,
-								expectedGroup.left.mainUser.name, expectedGroup.right.mainUser.name);
+								composedGroup.getLeft().getData().name, composedGroup.getRight().getData().name,
+								expectedGroup.getLeft().getData().name, expectedGroup.getRight().getData().name);
 						composedGroup.equals(expectedGroup);
 						throw new IllegalStateException(message);
 					}
@@ -329,7 +329,7 @@ public class GroupedListTest {
 			}
 
 			@Override
-			public void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b) {
+			public void onBreak(Group removedGroup, Group a, Group b) {
 				if (isDirectionForward) {
 					iterator.data.previous();
 					isDirectionForward = false;
@@ -352,10 +352,11 @@ public class GroupedListTest {
 	}
 	//endregion
 
+	//region Helpers
 	private void assertSingleGroupIsLocated(float viewCenterPosPx) {
 		assertThat(groupedList.getGroupsCount(), is(1));
 		assertThat(groupedList.getGroupsIterator().hasNext(), is(true));
-		assertThat(groupedList.getGroupsIterator().next().getCenterPosPx(), closeTo(viewCenterPosPx, DELTA));
+		assertThat(groupedList.getGroupsIterator().next().getCenterPosPx(groupedList.getSize()), closeTo(viewCenterPosPx, DELTA));
 	}
 
 	private void assertGroupsTreeIs(String treeString) {
@@ -383,4 +384,5 @@ public class GroupedListTest {
 	private float rightBorderPos(int size) {
 		return size - VIEW_SIZE / 2.0f;
 	}
+	//endregion
 }

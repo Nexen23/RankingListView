@@ -4,56 +4,56 @@ import android.support.annotation.Px;
 
 import alex.rankinglist.util.MathUtil;
 
-public class GroupCandidates implements Comparable<GroupCandidates>, TreeNode.OnParentUpdate {
+public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnParentUpdate {
 	private final @Px int itemSize;
 	private final float itemHalfSize;
 
-	private TreeNode left, right;
-	private Float intersectingSize;
+	private Group left, right;
+	private float intersectingSize;
 
-	public GroupCandidates(@Px int itemSize, TreeNode left, TreeNode right) {
+	public GroupCandidates(@Px int itemSize, Group left, Group right) {
 		this.itemSize = itemSize;
 		itemHalfSize = itemSize / 2.0f;
 
 		this.left = left;
 		this.right = right;
-		left.listeners.add(this);
-		right.listeners.add(this);
+		left.addListener(this);
+		right.addListener(this);
 		updateIntersectingSize();
 	}
 
-	public Float getIntersectingSize() {
+	public float getIntersectingSize() {
 		return intersectingSize;
 	}
 
-	public TreeNode compose(int height) {
-		left.listeners.remove(this);
-		right.listeners.remove(this);
-		return new TreeNode(itemSize, height, left, right);
+	public Group compose() {
+		left.removeListener(this);
+		right.removeListener(this);
+		return new Group(itemSize, intersectingSize, left, right);
 	}
 
 	@Override
-	public void parentSetFor(TreeNode node, TreeNode parent) {
-		node.listeners.remove(this);
+	public void parentSetFor(Group node, Group parent) {
+		node.removeListener(this);
 		if (node == left) {
 			left = parent;
-			left.listeners.add(this);
+			left.addListener(this);
 		} else {
 			right = parent;
-			right.listeners.add(this);
+			right.addListener(this);
 		}
 		updateIntersectingSize();
 	}
 
 	@Override
-	public void breakNode(TreeNode node) {
-		node.listeners.remove(this);
+	public void breakNode(Group node) {
+		node.removeListener(this);
 		if (node == left) {
-			left = node.right;
-			left.listeners.add(this);
+			left = node.getRight();
+			left.addListener(this);
 		} else {
-			right = node.left;
-			right.listeners.add(this);
+			right = node.getLeft();
+			right.addListener(this);
 		}
 		updateIntersectingSize();
 	}
@@ -66,11 +66,11 @@ public class GroupCandidates implements Comparable<GroupCandidates>, TreeNode.On
 			return intersectingSizeComparison;
 		} else {
 			final int relativePosesComparison =
-					MathUtil.Compare(a.right.posRelative - a.left.posRelative, b.right.posRelative - b.left.posRelative);
+					MathUtil.Compare(a.right.normalizedPos - a.left.normalizedPos, b.right.normalizedPos - b.left.normalizedPos);
 			if (relativePosesComparison != 0) {
 				return relativePosesComparison;
 			 } else {
-				final int namesComparison = a.left.mainUser.name.compareTo(b.left.mainUser.name);
+				final int namesComparison = a.left.getData().name.compareTo(b.left.getData().name);
 				return namesComparison;
 			}
 		}
@@ -86,12 +86,12 @@ public class GroupCandidates implements Comparable<GroupCandidates>, TreeNode.On
 		}
 
 		if (leftIsBorder && !rightIsBorder) {
-			intersectingSize = (itemSize + itemHalfSize) / right.posRelative;
+			intersectingSize = (itemSize + itemHalfSize) / right.normalizedPos;
 			return;
 		}
 
 		if (!leftIsBorder && rightIsBorder) {
-			intersectingSize = (itemSize + itemHalfSize) / (1 - left.posRelative);
+			intersectingSize = (itemSize + itemHalfSize) / (1 - left.normalizedPos);
 			return;
 		}
 
@@ -104,6 +104,6 @@ public class GroupCandidates implements Comparable<GroupCandidates>, TreeNode.On
 	}
 
 	private Float calcIntersectingSizeWithNoBound() {
-		return itemSize / (right.posRelative - left.posRelative);
+		return itemSize / (right.normalizedPos - left.normalizedPos);
 	}
 }
