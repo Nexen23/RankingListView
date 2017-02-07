@@ -33,27 +33,7 @@ public class Group extends EventsSource<Group.OnParentUpdate> implements Compara
 		setNormalizedPos((right.normalizedPos + left.normalizedPos) / 2);
 		this.left.setParent(this);
 		this.right.setParent(this);
-
-
-
-
-
-
-		if (left.prev != null) {
-			left.prev.next = this;
-		}
-		prev = left.prev;
-
-		if (right.next != null) {
-			right.next.prev = this;
-		}
-		next = right.next;
 	}
-
-
-
-
-
 	void setParent(final Group parent) {
 		forEachListener(new Actor<OnParentUpdate>() {
 			@Override

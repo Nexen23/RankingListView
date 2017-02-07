@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Px;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -48,16 +47,14 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 				usersGroups.add(new Group(itemSize, rank, item));
 			}
 			Collections.sort(usersGroups);
-			groupsTree.rootsCount = usersGroups.size();
 
 			groupsCandidates.clear();
 			ListIterator<Group> iter = usersGroups.listIterator();
 			Group prevNode = iter.next(), curNode;
-			groupsTree.root = prevNode;
+			groupsTree.addRoot(prevNode);
 			while (iter.hasNext()) {
 				curNode = iter.next();
-				prevNode.next = curNode;
-				curNode.prev = prevNode;
+				groupsTree.addRootAfter(prevNode, curNode);
 				groupsCandidates.add(new GroupCandidates(itemSize, prevNode, curNode));
 				prevNode = curNode;
 			}
@@ -91,22 +88,15 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 			GroupCandidates first = groupsCandidates.getFirst();
 			while (first.getIntersectingSize() >= space) {
 				Group newNode = first.compose();
-				if (newNode.getLeftNode() == groupsTree.root) {
-					groupsTree.root = newNode;
-				}
+
+				groupsTree.composeRoots(newNode.getLeftNode(), newNode.getRightNode(), newNode);
 				groupsHistory.push(newNode);
-				groupsTree.rootsCount--;
 
 				groupsCandidates.removeFirst();
 				Collections.sort(groupsCandidates);
 
 				final Group constNode = newNode;
-				forEachListener(new Actor<EventsListener>() {
-					@Override
-					public void actOn(EventsListener listener) {
-						listener.onGroup(constNode.getLeftNode(), constNode.getRightNode(), constNode);
-					}
-				});
+				forEachListener(listener -> listener.onGroup(constNode.getLeftNode(), constNode.getRightNode(), constNode));
 
 				if (groupsCandidates.isEmpty()) {
 					break;
@@ -126,27 +116,11 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 				groupsHistory.pop();
 
 				node.breakNode();
-
-				if (node.prev != null) {
-					node.prev.next = node.getLeftNode();
-				}
-				if (node.next != null) {
-					node.next.prev = node.getRightNode();
-				}
-				if (node == groupsTree.root) {
-					groupsTree.root = node.getLeftNode();
-				}
-
+				groupsTree.breakRoots(node.getLeftNode(), node.getRightNode(), node);
 				groupsCandidates.add(new GroupCandidates(itemSize, node.getLeftNode(), node.getRightNode()));
-				++groupsTree.rootsCount;
 
 				final Group constNode = node;
-				forEachListener(new Actor<EventsListener>() {
-					@Override
-					public void actOn(EventsListener listener) {
-						listener.onBreak(constNode, constNode.getLeftNode(), constNode.getRightNode());
-					}
-				});
+				forEachListener(listener -> listener.onBreak(constNode, constNode.getLeftNode(), constNode.getRightNode()));
 			} else {
 				break;
 			}
@@ -162,12 +136,6 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 		return groupsTree.getRootsCount();
 	}
 
-
-
-
-
-
-
 	@Override
 	public java.util.Iterator<Group> iterator() {
 		return groupsTree.getRootsIterator();
@@ -175,32 +143,7 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append(String.format("%d = [", groupsTree.rootsCount));
-
-		String prefix = "";
-		final Iterator<Group> iterator = groupsTree.getRootsIterator();
-		while (iterator.hasNext()) {
-			builder.append(prefix);
-			iterateTree(builder, iterator.next());
-			prefix = " + ";
-		}
-
-		builder.append("]");
-
-		return builder.toString();
-	}
-
-	private void iterateTree(final StringBuilder builder, Group group) {
-		if (group.getLeftNode() != null) {
-			builder.append('{');
-			iterateTree(builder, group.getLeftNode());
-			builder.append(", ");
-			iterateTree(builder, group.getRightNode());
-			builder.append('}');
-		} else {
-			builder.append(group.getData().name);
-		}
+		return groupsTree.toString();
 	}
 
 	public interface EventsListener {
