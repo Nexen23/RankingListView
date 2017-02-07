@@ -36,6 +36,7 @@ public class GroupedList {
 		groupsHistory = new Stack<>();
 		usersGroupsRoot = null;
 		prevHeight = null;
+		listeners.clear();
 	}
 
 	public void setData(Rank rank, List<User> users) {
@@ -163,6 +164,11 @@ public class GroupedList {
 
 				groupsDistances.removeFirst();
 				Collections.sort(groupsDistances);
+
+				for (EventsListener listener : listeners) {
+					listener.onGroup(newNode.left, newNode.right, newNode);
+				}
+
 				if (groupsDistances.isEmpty()) {
 					break;
 				} else {
@@ -195,6 +201,10 @@ public class GroupedList {
 
 				groupsDistances.add(new DistanceNode(userViewHeightPx, node.left, node.right));
 				++usersGroupsCount;
+
+				for (EventsListener listener : listeners) {
+					listener.onBreak(node, node.left, node.right);
+				}
 			} else {
 				break;
 			}
@@ -241,6 +251,16 @@ public class GroupedList {
 		return builder.toString();
 	}
 
+	private List<EventsListener> listeners = new LinkedList<>();
+
+	public void addListener(EventsListener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(EventsListener listener) {
+		listeners.remove(listener);
+	}
+
 
 	public class Group<T> {
 
@@ -269,5 +289,10 @@ public class GroupedList {
 			currentNode = currentNode.next;
 			return prevNode;
 		}
+	}
+
+	public interface EventsListener {
+		void onGroup(TreeNode a, TreeNode b, TreeNode composedGroup);
+		void onBreak(TreeNode removedGroup, TreeNode a, TreeNode b);
 	}
 }
