@@ -1,17 +1,18 @@
 package alex.rankinglist.misc.grouping;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Px;
 
 import alex.rankinglist.util.MathUtil;
 
-public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnParentUpdate {
+class GroupCandidates implements Comparable<GroupCandidates>, GroupNode.Events {
 	private final @Px int itemSize;
 	private final float itemHalfSize;
 
-	private Group left, right;
+	private GroupNode left, right;
 	private float intersectingSize;
 
-	public GroupCandidates(@Px int itemSize, Group left, Group right) {
+	public GroupCandidates(@Px int itemSize, GroupNode left, GroupNode right) {
 		this.itemSize = itemSize;
 		itemHalfSize = itemSize / 2.0f;
 
@@ -22,18 +23,18 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 		updateIntersectingSize();
 	}
 
-	public float getIntersectingSize() {
-		return intersectingSize;
+	public boolean isComposable(int space) {
+		return intersectingSize >= space;
 	}
 
-	public Group compose() {
+	public GroupNode compose() {
 		left.removeListener(this);
 		right.removeListener(this);
-		return new Group(itemSize, intersectingSize, left, right);
+		return new GroupNode(itemSize, intersectingSize, left, right);
 	}
 
 	@Override
-	public void parentSetFor(Group node, Group parent) {
+	public void onParentSetFor(GroupNode node, GroupNode parent) {
 		node.removeListener(this);
 		if (node == left) {
 			left = parent;
@@ -46,7 +47,7 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 	}
 
 	@Override
-	public void breakNode(Group node) {
+	public void onNodeBroken(GroupNode node) {
 		node.removeListener(this);
 		if (node == left) {
 			left = node.getRightNode();
@@ -59,7 +60,7 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 	}
 
 	@Override
-	public int compareTo(GroupCandidates obj) {
+	public int compareTo(@NonNull GroupCandidates obj) {
 		GroupCandidates a = this, b = obj;
 		final int intersectingSizeComparison = MathUtil.Compare(b.intersectingSize, a.intersectingSize);
 		if (intersectingSizeComparison != 0) {
@@ -78,11 +79,11 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 	}
 
 	private void updateIntersectingSize() {
-		final Float height = calcIntersectingSizeWithNoBound();
-		final boolean leftIsBorder = left.isLeftBorderWhen(height), rightIsBorder = right.isRightBorderWhen(height);
+		final Float space = calcIntersectingSpaceWithNoBound();
+		final boolean leftIsBorder = left.isLeftBorderWhen(space), rightIsBorder = right.isRightBorderWhen(space);
 
 		if (!leftIsBorder && !rightIsBorder) {
-			intersectingSize = height;
+			intersectingSize = space;
 			return;
 		}
 
@@ -104,7 +105,7 @@ public class GroupCandidates implements Comparable<GroupCandidates>, Group.OnPar
 		throw new IllegalStateException();
 	}
 
-	private Float calcIntersectingSizeWithNoBound() {
+	private Float calcIntersectingSpaceWithNoBound() {
 		return itemSize / (right.getNormalizedPos() - left.getNormalizedPos());
 	}
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupedList;
-import alex.rankinglist.misc.grouping.Group;
+import alex.rankinglist.misc.grouping.GroupNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
@@ -90,7 +90,7 @@ public class UsersView extends FrameLayout {
 		Assert.assertSame(getChildCount(), groupedList.getGroupsCount());
 
 		int i = 0;
-		for (Group group : groupedList) {
+		for (GroupNode group : groupedList) {
 			UsersGroupView child = (UsersGroupView) getChildAt(i);
 //			MarginLayoutParams params = (MarginLayoutParams) child.getLayoutParams();
 //			params.topMargin = group.posAbsolute.intValue();

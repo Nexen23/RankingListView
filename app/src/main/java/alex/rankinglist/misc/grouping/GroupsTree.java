@@ -1,16 +1,74 @@
 package alex.rankinglist.misc.grouping;
 
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.util.Iterator;
+import java.util.List;
 
 class GroupsTree {
 	private int rootsCount = 0;
-	private Group root;
+	private GroupNode root;
 
-	public GroupsTree() {
+	/**
+	 * @param groups must be sorted
+	 */
+	public void addGroups(List<GroupNode> groups) {
+		clear();
+
+		GroupNode prevNode = null;
+		for (GroupNode curNode : groups) {
+			if (prevNode == null) {
+				root = curNode;
+			} else {
+				prevNode.next = curNode;
+				curNode.prev = prevNode;
+			}
+			prevNode = curNode;
+			++rootsCount;
+		}
+	}
+
+	public void updateMergedNodes(GroupNode mergedNode) {
+		GroupNode left = mergedNode.getLeftNode(), right = mergedNode.getRightNode();
+
+		if (left.prev != null) {
+			left.prev.next = mergedNode;
+		}
+		mergedNode.prev = left.prev;
+
+		if (right.next != null) {
+			right.next.prev = mergedNode;
+		}
+		mergedNode.next = right.next;
+
+		if (left == root) {
+			root = mergedNode;
+		}
+
+		--rootsCount;
+	}
+
+	public void updateBrokenNode(GroupNode brokenNode) {
+		GroupNode left = brokenNode.getLeftNode(), right = brokenNode.getRightNode();
+
+		if (brokenNode.prev != null) {
+			brokenNode.prev.next = left;
+		}
+		if (brokenNode.next != null) {
+			brokenNode.next.prev = right;
+		}
+		if (brokenNode == root) {
+			root = left;
+		}
+
+		++rootsCount;
+	}
+
+	public int getRootsCount() {
+		return rootsCount;
+	}
+
+	public boolean isEmpty() {
+		return rootsCount == 0;
 	}
 
 	public void clear() {
@@ -18,85 +76,8 @@ class GroupsTree {
 		rootsCount = 0;
 	}
 
-	public boolean isEmpty() {
-		return rootsCount == 0;
-	}
-
-	public int getRootsCount() {
-		return rootsCount;
-	}
-
-	public void addRoot(@NonNull Group groupRoot) {
-		addRootAfter(null, groupRoot);
-	}
-
-	public void addRootAfter(@Nullable Group prevGroupRoot, @NonNull Group groupRootToAdd) {
-		if (isEmpty()) {
-			root = groupRootToAdd;
-		}
-
-		if (prevGroupRoot != null) {
-			prevGroupRoot.next = groupRootToAdd;
-		}
-		groupRootToAdd.prev = prevGroupRoot;
-
-		++rootsCount;
-	}
-
-	public java.util.Iterator<Group> getRootsIterator() {
+	public java.util.Iterator<GroupNode> getRootsIterator() {
 		return new RootsIterator(root);
-	}
-
-	public void composeRoots(Group left, Group right, Group newNode) {
-		if (left.prev != null) {
-			left.prev.next = newNode;
-		}
-		newNode.prev = left.prev;
-
-		if (right.next != null) {
-			right.next.prev = newNode;
-		}
-		newNode.next = right.next;
-
-		if (left == root) {
-			root = newNode;
-		}
-
-		--rootsCount;
-	}
-
-	public void breakRoots(Group left, Group right, Group oldNode) {
-		if (oldNode.prev != null) {
-			oldNode.prev.next = left;
-		}
-		if (oldNode.next != null) {
-			oldNode.next.prev = right;
-		}
-		if (oldNode == root) {
-			root = left;
-		}
-
-		++rootsCount;
-	}
-
-	private class RootsIterator implements java.util.Iterator<Group> {
-		private Group currentNode;
-
-		private RootsIterator(Group rootNode) {
-			this.currentNode = rootNode;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return currentNode != null;
-		}
-
-		@Override
-		public Group next() {
-			Group prevNode = currentNode;
-			currentNode = currentNode.next;
-			return prevNode;
-		}
 	}
 
 	@Override
@@ -105,7 +86,7 @@ class GroupsTree {
 		builder.append(String.format("%d = [", getRootsCount()));
 
 		String prefix = "";
-		final Iterator<Group> iterator = getRootsIterator();
+		final Iterator<GroupNode> iterator = getRootsIterator();
 		while (iterator.hasNext()) {
 			builder.append(prefix);
 			iterateTree(builder, iterator.next());
@@ -117,7 +98,7 @@ class GroupsTree {
 		return builder.toString();
 	}
 
-	private void iterateTree(final StringBuilder builder, Group group) {
+	private void iterateTree(final StringBuilder builder, GroupNode group) {
 		if (group.getLeftNode() != null) {
 			builder.append('{');
 			iterateTree(builder, group.getLeftNode());
@@ -126,6 +107,26 @@ class GroupsTree {
 			builder.append('}');
 		} else {
 			builder.append(group.getData().name);
+		}
+	}
+
+	private class RootsIterator implements java.util.Iterator<GroupNode> {
+		private GroupNode currentNode;
+
+		private RootsIterator(GroupNode rootNode) {
+			this.currentNode = rootNode;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentNode != null;
+		}
+
+		@Override
+		public GroupNode next() {
+			GroupNode prevNode = currentNode;
+			currentNode = currentNode.next;
+			return prevNode;
 		}
 	}
 }

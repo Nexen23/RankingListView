@@ -17,7 +17,7 @@ import java.util.Stack;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupedList;
-import alex.rankinglist.misc.grouping.Group;
+import alex.rankinglist.misc.grouping.GroupNode;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.util.MathUtil;
 import alex.rankinglist.widget.model.Rank;
@@ -34,6 +34,7 @@ public class GroupedListTest {
 
 	private static final double DELTA = MathUtil.EPSILON;
 	private static final @Px int VIEW_SIZE = 105;
+	private static final float VIEW_HALF_SIZE = VIEW_SIZE / 2.0f;
 	private static Rank rank;
 	private static GroupedList groupedList;
 
@@ -275,16 +276,16 @@ public class GroupedListTest {
 
 	@Test
 	public void setSpace_breakGroupsShouldBeInReverseOrderOfComposing() {
-		final Stack<Pair<Group, Group>> groups = new Stack<>();
+		final Stack<Pair<GroupNode, GroupNode>> groups = new Stack<>();
 		groupedList.addListener(new GroupedList.EventsListener() {
 			@Override
-			public void onGroup(Group composedGroup, Group a, Group b) {
+			public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
 				groups.push(Pair.create(a, b));
 			}
 
 			@Override
-			public void onBreak(Group removedGroup, Group a, Group b) {
-				final Pair<Group, Group> lastGroup = groups.pop();
+			public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
+				final Pair<GroupNode, GroupNode> lastGroup = groups.pop();
 				if (lastGroup.first != a || lastGroup.second != b) {
 					String message = String.format("Broken group of User(%s) & User(%s)\n--should be composed of User(%s) & User(%s)",
 							removedGroup.getLeftNode().getData().name, removedGroup.getRightNode().getData().name,
@@ -302,19 +303,19 @@ public class GroupedListTest {
 
 	@Test
 	public void setSpace_regroupingAfterBreakingShouldBeInTheSameOrderWithAnySpeed() {
-		final LinkedList<Group> groupsHistory = new LinkedList<>();
-		final Wrapper<ListIterator<Group>> iterator = Wrapper.wrap(groupsHistory.listIterator());
+		final LinkedList<GroupNode> groupsHistory = new LinkedList<>();
+		final Wrapper<ListIterator<GroupNode>> iterator = Wrapper.wrap(groupsHistory.listIterator());
 		groupedList.addListener(new GroupedList.EventsListener() {
 			boolean isDirectionForward = true;
 
 			@Override
-			public void onGroup(Group composedGroup, Group a, Group b) {
+			public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
 				if (!isDirectionForward) {
 					iterator.data.next();
 					isDirectionForward = true;
 				}
 				if (iterator.data.hasNext()) {
-					Group expectedGroup = iterator.data.next();
+					GroupNode expectedGroup = iterator.data.next();
 					if (!composedGroup.equals(expectedGroup)) {
 						String message = String.format("Composed group of User(%s) & User(%s)\n--was previously composed of User(%s) & User(%s)",
 								composedGroup.getLeftNode().getData().name, composedGroup.getRightNode().getData().name,
@@ -329,7 +330,7 @@ public class GroupedListTest {
 			}
 
 			@Override
-			public void onBreak(Group removedGroup, Group a, Group b) {
+			public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
 				if (isDirectionForward) {
 					iterator.data.previous();
 					isDirectionForward = false;
@@ -344,8 +345,8 @@ public class GroupedListTest {
 		groupedList.setSpace(200);
 
 		// Slow zoom out
-		for (int size = 10_000; size >= 200; size -= 200) {
-			groupedList.setSpace(size);
+		for (int space = 10_000; space >= 200; space -= 200) {
+			groupedList.setSpace(space);
 		}
 
 		assertGroupsTreeIs("1 = [{{0, {{1, 2}, 3}}, {{{{4, 5}, {6, 7}}, 8}, {{{9, 10}, 11}, {12, {13, 14}}}}}]");
@@ -355,8 +356,7 @@ public class GroupedListTest {
 	//region Helpers
 	private void assertSingleGroupIsLocated(float viewCenterPosPx) {
 		assertThat(groupedList.getGroupsCount(), is(1));
-		assertThat(groupedList.iterator().hasNext(), is(true));
-		assertThat(groupedList.iterator().next().getCenterPosPx(groupedList.getSpace()), closeTo(viewCenterPosPx, DELTA));
+		assertThat(getGroupCenteredPos(groupedList.iterator().next()), closeTo(viewCenterPosPx, DELTA));
 	}
 
 	private void assertGroupsTreeIs(String treeString) {
@@ -378,11 +378,15 @@ public class GroupedListTest {
 	}
 
 	private float leftBorderPos() {
-		return VIEW_SIZE / 2.0f;
+		return VIEW_HALF_SIZE;
 	}
 
-	private float rightBorderPos(int size) {
-		return size - VIEW_SIZE / 2.0f;
+	private float rightBorderPos(int space) {
+		return space - VIEW_HALF_SIZE;
+	}
+
+	public double getGroupCenteredPos(GroupNode group) {
+		return group.getAbsolutePos(groupedList.getSpace()) + VIEW_HALF_SIZE;
 	}
 	//endregion
 }
