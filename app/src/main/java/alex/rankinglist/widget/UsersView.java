@@ -3,23 +3,28 @@ package alex.rankinglist.widget;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import junit.framework.Assert;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import alex.rankinglist.R;
-import alex.rankinglist.misc.grouping.GroupedList;
 import alex.rankinglist.misc.grouping.GroupNode;
+import alex.rankinglist.misc.grouping.GroupedList;
 import alex.rankinglist.util.LogUtil;
 import alex.rankinglist.widget.model.Rank;
 import alex.rankinglist.widget.model.User;
 
 
-public class UsersView extends FrameLayout {
+public class UsersView extends FrameLayout implements GroupedList.EventsListener {
 	private Rank rank;
 	private GroupedList groupedList;
+	private LinkedList<View> animationViews = new LinkedList<>();
+	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>();
 
 	public UsersView(Context context) {
 		super(context);
@@ -38,6 +43,7 @@ public class UsersView extends FrameLayout {
 
 	void init() {
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
+		groupedList.addListener(this);
 	}
 
 	@Override
@@ -51,7 +57,6 @@ public class UsersView extends FrameLayout {
 		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
-			createOrRemoveGroupsViews();
 			updateGroupsViews();
 
 			int widthSpec = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY);
@@ -69,27 +74,35 @@ public class UsersView extends FrameLayout {
 	public void setModel(Rank rank, List<User> users) {
 		this.rank = rank;
 		groupedList.setData(rank, users);
+		for (GroupNode group : groupedList) {
+			final GroupView view = new GroupView(getContext());
+			groupsViews.put(group, view);
+			addView(view);
+		}
 	}
 
-	private void createOrRemoveGroupsViews() {
-		// Create
-		int childsCount = getChildCount(), groupsCount = groupedList.getGroupsCount();
-		for (int i = childsCount; i < groupsCount; ++i) {
-			addView(new GroupView(getContext()));
-		}
+	@Override
+	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
+		removeView(groupsViews.remove(a));
+		GroupView recycledView = groupsViews.remove(b);
+		groupsViews.put(composedGroup, recycledView);
+	}
 
-		// Remove
-		if (childsCount > groupsCount) {
-			removeViews(groupsCount, childsCount - groupsCount);
-		}
+	@Override
+	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
+		GroupView recycledView = groupsViews.remove(removedGroup);
+		groupsViews.put(a, recycledView);
+
+		GroupView newView = new GroupView(getContext());
+		addView(newView);
+		groupsViews.put(b, newView);
 	}
 
 	private void updateGroupsViews() {
 		Assert.assertEquals(getChildCount(), groupedList.getGroupsCount());
 
-		int i = 0;
 		for (GroupNode group : groupedList) {
-			GroupView view = (GroupView) getChildAt(i);
+			GroupView view = groupsViews.get(group);
 			view.setY(group.getAbsolutePos(getHeight()));
 
 			if (group.isLeaf()) {
@@ -97,8 +110,6 @@ public class UsersView extends FrameLayout {
 			} else {
 				view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
 			}
-
-			++i;
 		}
 	}
 }
