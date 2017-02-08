@@ -92,6 +92,25 @@ public class GroupedListTest {
 
 		assertSingleGroupIsLocated(score / 100.0f * size);
 	}
+
+	@Test
+	public void setData_doNothingWithoutSpaceChange() {
+		groupedList.setData(rank, users(33, 45, 56, 67));
+
+		groupedList.setSpace(1000);
+		final boolean didGroupingCalls = groupedList.setSpace(1000);
+
+		assertThat(didGroupingCalls, is(false));
+	}
+
+	@Test
+	public void setData_emptyUsersListNotThrow() {
+		groupedList.setData(rank, users());
+
+		final boolean didGroupingCalls = groupedList.setSpace(1000);
+
+		assertThat(didGroupingCalls, is(false));
+	}
 	//endregion
 
 	//region Compose groups

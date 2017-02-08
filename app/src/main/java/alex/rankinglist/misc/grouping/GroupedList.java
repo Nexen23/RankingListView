@@ -61,6 +61,9 @@ public class GroupedList extends EventsSource<GroupedList.EventsListener> implem
 		}
 	}
 
+	/**
+	 * Should be called after {@link #setData setData()}
+	 */
 	public boolean setSpace(@IntRange(from=0) int newSpace) {
 		if (newSpace < itemSize) {
 			final String message = String.format("Space(%d) must be greater than view itemSize(%d)", newSpace, itemSize);
