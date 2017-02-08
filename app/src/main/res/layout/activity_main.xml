@@ -4,19 +4,12 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<FrameLayout
+	<alex.rankinglist.widget.RankingsListView
+		android:id="@+id/lv_rankings"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@color/gray">
-
-		<alex.rankinglist.widget.RankingsListView
-			android:id="@+id/lv_rankings"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:layout_gravity="center"
-			android:fillViewport="true"
-			app:max_width="500dp"/>
-
-	</FrameLayout>
+		android:layout_gravity="center"
+		android:fillViewport="true"
+		app:max_width="500dp"/>
 
 </layout>

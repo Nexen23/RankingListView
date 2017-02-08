@@ -10,7 +10,7 @@ import java.util.Random;
 import alex.rankinglist.widget.model.User;
 
 public class RandomUtil {
-	private static boolean ENABLE_RANDOM = false;
+	private static boolean ENABLE_RANDOM = true;
 	private static Randomizer randomizer = new Randomizer();
 
 	public static String GenerateName() {

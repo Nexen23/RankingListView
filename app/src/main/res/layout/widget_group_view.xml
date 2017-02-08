@@ -12,54 +12,47 @@
 		android:background="@drawable/bg_border"
 		android:layout_marginLeft="@dimen/space_normal">
 
-		<LinearLayout
-			android:orientation="horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent">
+		<TextView
+			tools:text="Username (and some very long-long text here)"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_name"
+			android:layout_weight="1"
+			android:includeFontPadding="false"
+			android:ellipsize="end"
+			android:maxLines="1"
+			android:textSize="17sp"
+			android:textColor="@color/colorPrimaryDark"
+			android:layout_gravity="center_vertical"
+			android:paddingLeft="@dimen/space_small"
+			android:paddingRight="@dimen/space_small"/>
 
-			<TextView
-				tools:text="Username (and some very long-long text here)"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:id="@+id/tv_name"
-				android:layout_weight="1"
-				android:includeFontPadding="false"
-				android:ellipsize="end"
-				android:maxLines="1"
-				android:textSize="17sp"
-				android:textColor="@color/colorPrimaryDark"
-				android:layout_gravity="center_vertical"
-				android:paddingLeft="@dimen/space_small"
-				android:paddingRight="@dimen/space_small"/>
+		<TextView
+			tools:text="+23"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:maxLength="3"
+			android:includeFontPadding="false"
+			android:maxLines="1"
+			android:id="@+id/tv_group_size"
+			android:textSize="12sp"
+			android:textColor="@android:color/white"
+			android:background="@drawable/bg_group_size"
+			android:layout_gravity="center_vertical"
+			android:gravity="center"
+			android:layout_marginRight="@dimen/space_small"/>
 
-			<TextView
-				tools:text="+23"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:maxLength="3"
-				android:includeFontPadding="false"
-				android:maxLines="1"
-				android:id="@+id/tv_group_size"
-				android:textSize="12sp"
-				android:textColor="@android:color/white"
-				android:background="@drawable/bg_group_size"
-				android:layout_gravity="center_vertical"
-				android:gravity="center"
-				android:layout_marginRight="@dimen/space_small"/>
-
-			<TextView
-				tools:text="14%"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:id="@+id/tv_rank"
-				android:includeFontPadding="false"
-				android:textSize="15sp"
-				android:layout_gravity="center_vertical"
-				android:gravity="right"
-				android:paddingLeft="@dimen/space_small"
-				android:paddingRight="@dimen/space_small"/>
-		</LinearLayout>
-
+		<TextView
+			tools:text="14%"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_rank"
+			android:includeFontPadding="false"
+			android:textSize="15sp"
+			android:layout_gravity="center_vertical"
+			android:gravity="right"
+			android:paddingLeft="@dimen/space_small"
+			android:paddingRight="@dimen/space_small"/>
 	</LinearLayout>
 
 </layout>
