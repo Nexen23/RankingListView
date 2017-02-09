@@ -48,8 +48,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	void init() {
 		//fadeDuration = getResources().getInteger(R.integer.animation_fast_duration);
 		//moveDuration = getResources().getInteger(R.integer.animation_slow_duration);
-		fadeDuration = 150;
-		moveDuration = 300;
+		fadeDuration = 1500;
+		moveDuration = 3000;
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 		groupedList.addListener(this);
 	}
@@ -96,23 +96,29 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		groupsViews.put(composedGroup, recycledView);
 	}
 
+	boolean breakingAnimationEnabled = false;
+
 	@Override
 	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
 		final GroupView removedView = groupsViews.remove(removedGroup);
-		removedView.animate().cancel();
-		if (removedView.getTag() instanceof AnimationData) {
-			((AnimationData) removedView.getTag()).animator.cancel();
+		if (breakingAnimationEnabled) {
+			removedView.animate().cancel();
+			if (removedView.getTag() instanceof AnimationData) {
+				((AnimationData) removedView.getTag()).animator.cancel();
+			}
+			removedView.animate()
+					.alpha(0)
+					.setDuration(fadeDuration)
+					.setInterpolator(new LinearInterpolator())
+					.withEndAction(() -> {
+						removeView(removedView);
+						animatedViews.remove(removedView);
+					});
+			removedView.setTag(removedGroup);
+			animatedViews.add(removedView);
+		} else {
+			removeView(removedView);
 		}
-		removedView.setTag(removedGroup);
-		animatedViews.add(removedView);
-		removedView.animate()
-				.alpha(0)
-				.setDuration(fadeDuration)
-				.setInterpolator(new LinearInterpolator())
-				.withEndAction(() -> {
-					removeView(removedView);
-					animatedViews.remove(removedView);
-				});
 
 		float initPos = removedGroup.getAbsolutePos(getHeight());
 
@@ -120,14 +126,18 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		GroupView newView = new GroupView(getContext());
 		addView(newView, 0);
 		groupsViews.put(a, newView);
-		setAnimation(newView, a, initPos);
-		setViewModel(newView, a);
+		if (breakingAnimationEnabled) {
+			setAnimation(newView, a, initPos);
+			setViewModel(newView, a);
+		}
 
 		newView = new GroupView(getContext());
 		addView(newView, 0);
 		groupsViews.put(b, newView);
-		setAnimation(newView, b, initPos);
-		setViewModel(newView, b);
+		if (breakingAnimationEnabled) {
+			setAnimation(newView, b, initPos);
+			setViewModel(newView, b);
+		}
 	}
 
 
