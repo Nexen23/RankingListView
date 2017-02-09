@@ -48,7 +48,7 @@ public class RankingView extends FrameLayout {
 		binding = WidgetRankingBinding.inflate(LayoutInflater.from(getContext()), this, true);
 		cornerRadius = getResources().getDimensionPixelSize(R.dimen.border_corner_large);
 		spaceBetweenChildren = getResources().getDimensionPixelSize(R.dimen.space_normal);
-		animationDuration = getResources().getInteger(R.integer.animation_duration);
+		animationDuration = getResources().getInteger(R.integer.animation_normal_duration);
 		setMinimumHeight(binding.getRoot().getMinimumHeight());
 	}
 

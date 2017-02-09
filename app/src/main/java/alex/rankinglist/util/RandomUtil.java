@@ -25,7 +25,7 @@ public class RandomUtil {
 	public static List<User> GenerateUsersList(@IntRange(from=0) int count) {
 		List<User> users = new ArrayList<>(count);
 		if (!ENABLE_RANDOM) {
-			for (int i = 0; i <= 6; ++i) {
+			for (int i = 0; i <= 10; ++i) {
 				users.add(new User(GenerateName(), i * 5));
 			}
 
@@ -37,8 +37,8 @@ public class RandomUtil {
 //			users.add(new User(GenerateName(), 20));
 //			users.add(new User(GenerateName(), 47));
 //
-//			users.add(new User(GenerateName(), 80));
-//			users.add(new User(GenerateName(), 85));
+			users.add(new User(GenerateName(), 92));
+			users.add(new User(GenerateName(), 97));
 //			users.add(new User(GenerateName(), 75));
 		} else {
 			for (int i = 0; i < count; ++i) {
