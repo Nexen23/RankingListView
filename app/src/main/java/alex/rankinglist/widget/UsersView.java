@@ -31,6 +31,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>();
 	private int fadeDuration, moveDuration;
 
+	boolean composingAnimationEnabled = true;
+	boolean breakingAnimationEnabled = false;
+
 	public UsersView(Context context) {
 		super(context);
 		init();
@@ -49,7 +52,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	void init() {
 		//fadeDuration = getResources().getInteger(R.integer.animation_fast_duration);
 		//moveDuration = getResources().getInteger(R.integer.animation_fast_duration);
-		fadeDuration = 150;
+		fadeDuration = 1500;
 		//moveDuration = 3000;
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
@@ -94,8 +97,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		groupedList.setData(rank, users);
 	}
 
-	boolean composingAnimationEnabled = true;
-
 	void setComposeAnimation(final View view, final GroupNode a, GroupNode target) {
 		float finalNormalizedPos = target.getAbsolutePos(getHeight()) / getHeight();
 		ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
@@ -121,11 +122,25 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 				tag.setAnimatedValue(1);
 				tag.updateY(view);
 				view.setTag(null);
+
+				Both<View> pair = composingViews.get(target);
+				if (pair != null) {
+					if (pair.first == view) {
+						pair.first = null;
+					}
+					if (pair.second == view) {
+						pair.second = null;
+					}
+
+					if (pair.first == null && pair.second == null) {
+						composingViews.remove(target);
+					}
+				}
 			}
 
 			@Override
 			public void onAnimationCancel(Animator animation) {
-
+				LogUtil.d(this, "ANIMATION:: canceled", animation.getDuration());
 			}
 
 			@Override
@@ -135,6 +150,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		});
 		animator.start();
 	}
+
+	HashMap<View, Both<View>> composingViews = new HashMap<>();
 
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
@@ -152,16 +169,18 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 					//.setInterpolator(new DecelerateInterpolator());
 		}
 
-		setComposingAnimationForLeaf(a, composedGroup);
-		setComposingAnimationForLeaf(b, composedGroup);
+		final Both<View> composingParts = Both.create(setComposingAnimationForLeaf(a, composedGroup),
+				setComposingAnimationForLeaf(b, composedGroup));
+		composingViews.put(composedView, composingParts);
 
 
 		addView(composedView, 0);
 		composedView.bringToFront();
 	}
 
-	void setComposingAnimationForLeaf(final GroupNode node, GroupNode target) {
+	GroupView setComposingAnimationForLeaf(final GroupNode node, GroupNode target) {
 		final GroupView view = groupsViews.remove(node);
+		stopComposingAnimationFor(view);
 		setViewModel(view, node);
 		if (composingAnimationEnabled) {
 			view.animate().cancel();
@@ -174,13 +193,31 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		} else {
 			removeView(view);
 		}
+		return view;
 	}
 
-	boolean breakingAnimationEnabled = false;
+	void stopComposingAnimationFor(final View view) {
+		final Both<View> composingParts = composingViews.remove(view);
+
+		if (composingParts != null) {
+			if (composingParts.first != null && composingParts.first.getTag() != null
+					&& composingParts.first.getTag() instanceof AnimationData) {
+				((AnimationData) composingParts.first.getTag()).animator.cancel();
+			}
+
+			if (composingParts.second != null && composingParts.second.getTag() != null
+					&& composingParts.second.getTag() instanceof AnimationData) {
+				((AnimationData) composingParts.second.getTag()).animator.cancel();
+			}
+		}
+	}
 
 	@Override
 	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
 		final GroupView removedView = groupsViews.remove(removedGroup);
+		if (composingAnimationEnabled) {
+			stopComposingAnimationFor(removedView);
+		}
 		if (breakingAnimationEnabled) {
 			removedView.animate().cancel();
 			if (removedView.getTag() instanceof AnimationData) {
@@ -338,6 +375,19 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 			view.setY((posIsInit ? absolutePos : shouldBeAbsolutePos) - distance * animatedValue * (posIsInit ? 1 : -1));
 			//LogUtil.d(this, "ANIMATION:: %.2f", animatedValue);
+		}
+	}
+
+	static class Both<T> {
+		public T first, second;
+
+		public Both(T first, T second) {
+			this.first = first;
+			this.second = second;
+		}
+
+		public static <T> Both<T> create(T first, T second) {
+			return new Both<>(first, second);
 		}
 	}
 }
