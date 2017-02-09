@@ -169,8 +169,10 @@ public class RankingsListView extends ScrollView {
 					(int) containerHeight, (int) newHeight, params.height,
 					focusY);
 
-			params.height = (int) newHeight;
-			container.setLayoutParams(params);
+			if (((int) newHeight) != params.height) {
+				params.height = (int) newHeight;
+				container.setLayoutParams(params);
+			}
 
 			nextScrollPos = newScrollY;
 			return true;
