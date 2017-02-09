@@ -6,7 +6,6 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
@@ -27,6 +26,7 @@ import alex.rankinglist.widget.model.User;
 public class UsersView extends FrameLayout implements GroupedList.EventsListener {
 	private Rank rank;
 	private GroupedList groupedList;
+	private boolean didSkippedFirstGrouping = false;
 	private LinkedList<View> animatedViews = new LinkedList<>();
 	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>();
 	private int fadeDuration, moveDuration;
@@ -52,7 +52,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		fadeDuration = 150;
 		//moveDuration = 3000;
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
-		groupedList.addListener(this);
 	}
 
 	@Override
@@ -66,6 +65,16 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
+			if (!didSkippedFirstGrouping) {
+				didSkippedFirstGrouping = true;
+				groupedList.addListener(this);
+
+				for (GroupNode group : groupedList) {
+					final GroupView view = new GroupView(getContext());
+					groupsViews.put(group, view);
+					addView(view);
+				}
+			}
 			updateGroupsViews();
 
 			int widthSpec = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY);
@@ -83,19 +92,14 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	public void setModel(Rank rank, List<User> users) {
 		this.rank = rank;
 		groupedList.setData(rank, users);
-		for (GroupNode group : groupedList) {
-			final GroupView view = new GroupView(getContext());
-			groupsViews.put(group, view);
-			addView(view);
-		}
 	}
 
 	boolean composingAnimationEnabled = true;
 
-	void setComposeAnimation(final View view, final GroupNode a, float finalPos) {
-		float finalNormalizedPos = finalPos / getHeight();
+	void setComposeAnimation(final View view, final GroupNode a, GroupNode target) {
+		float finalNormalizedPos = target.getAbsolutePos(getHeight()) / getHeight();
 		ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
-		view.setTag(new AnimationData(animator, a, finalNormalizedPos, false));
+		view.setTag(new AnimationData(animator, a, finalNormalizedPos, false, target));
 
 		animator.setDuration(fadeDuration).setInterpolator(new LinearInterpolator());
 		animator.addUpdateListener(animation -> {
@@ -138,25 +142,25 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		groupsViews.put(composedGroup, composedView);
 		if (composingAnimationEnabled) {
 			setViewModel(composedView, composedGroup);
+			composedView.animate().cancel();
 			composedView.setAlpha(0);
 			composedView.animate()
 					.alpha(1)
+					//.xBy(-100)
 					.setDuration(fadeDuration)
-					//.setInterpolator(new LinearInterpolator());
-					.setInterpolator(new DecelerateInterpolator());
+					.setInterpolator(new LinearInterpolator());
+					//.setInterpolator(new DecelerateInterpolator());
 		}
 
-		float finalPos = composedGroup.getAbsolutePos(getHeight());
-
-		setComposingAnimationForLeaf(a, finalPos);
-		setComposingAnimationForLeaf(b, finalPos);
+		setComposingAnimationForLeaf(a, composedGroup);
+		setComposingAnimationForLeaf(b, composedGroup);
 
 
 		addView(composedView, 0);
 		composedView.bringToFront();
 	}
 
-	void setComposingAnimationForLeaf(final GroupNode node, float finalPos) {
+	void setComposingAnimationForLeaf(final GroupNode node, GroupNode target) {
 		final GroupView view = groupsViews.remove(node);
 		setViewModel(view, node);
 		if (composingAnimationEnabled) {
@@ -166,7 +170,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			}
 
 			animatedViews.add(view);
-			setComposeAnimation(view, node, finalPos);
+			setComposeAnimation(view, node, target);
 		} else {
 			removeView(view);
 		}
@@ -185,7 +189,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			removedView.animate()
 					.alpha(0)
 					.setDuration(fadeDuration)
-					.setInterpolator(new DecelerateInterpolator())
+					//.setInterpolator(new DecelerateInterpolator())
+					.setInterpolator(new LinearInterpolator())
 					.withEndAction(() -> {
 						removeView(removedView);
 						animatedViews.remove(removedView);
@@ -298,8 +303,10 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		public GroupNode group;
 		public float normalizedPos;
 		public Animator animator;
-		private float animatedValue;
+		private float animatedValue = 0;
+
 		private boolean posIsInit = true; // or final
+		private GroupNode target;
 
 		public AnimationData(Animator animator, GroupNode group, float normalizedPos) {
 			this.animator = animator;
@@ -307,11 +314,12 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			this.normalizedPos = normalizedPos;
 		}
 
-		public AnimationData(Animator animator, GroupNode group, float normalizedPos, boolean posIsInit) {
+		public AnimationData(Animator animator, GroupNode group, float normalizedPos, boolean posIsInit, GroupNode target) {
 			this.animator = animator;
 			this.group = group;
 			this.normalizedPos = normalizedPos;
 			this.posIsInit = posIsInit;
+			this.target = target;
 		}
 
 		public void setAnimatedValue(float animatedValue) {
@@ -320,7 +328,12 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 		public void updateY(View view) {
 			final float shouldBeAbsolutePos = group.getAbsolutePos(getHeight());
-			final float absolutePos = getHeight() * normalizedPos;
+			float absolutePos = getHeight() * normalizedPos;
+
+			if (!posIsInit) {
+				absolutePos = target.getAbsolutePos(getHeight());
+			}
+
 			final float distance = absolutePos - shouldBeAbsolutePos;
 
 			view.setY((posIsInit ? absolutePos : shouldBeAbsolutePos) - distance * animatedValue * (posIsInit ? 1 : -1));
