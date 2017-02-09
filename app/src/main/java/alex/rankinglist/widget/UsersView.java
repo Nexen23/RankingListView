@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
+import junit.framework.Assert;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +32,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private Rank rank;
 	private GroupedList groupedList;
 	private boolean didInitViews = false;
-	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>();
+	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(), animationsViews = new HashMap<>();
 	private LinkedList<GroupingAnimation> animations = new LinkedList<>();
 
 	public UsersView(Context context) {
@@ -72,6 +74,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 				didInitViews = true;
 				initViews();
 			}
+			Assert.assertEquals(getChildCount(), groupsViews.size() + animationsViews.size());
 			updateChilds();
 			updateAnimations();
 
@@ -96,24 +99,30 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		groupedList.addListener(this);
 
 		for (GroupNode group : groupedList) {
-			final GroupView view = new GroupView(getContext());
-			addGroupView(view, group);
+			addGroupView(group);
 		}
 	}
 
-	private void addGroupView(GroupView view, GroupNode group) {
+	private GroupView addGroupView(GroupNode group) {
+		final GroupView view = newView(group);
 		addView(view);
 		groupsViews.put(group, view);
-
-		if (group.isLeaf()) {
-			view.setModel(group.getData());
-		} else {
-			view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
-		}
+		return view;
 	}
 
 	private void removeGroupView(GroupNode group) {
-		removeView(groupsViews.remove(group));
+		final GroupView removedView = groupsViews.remove(group);
+		removeView(removedView);
+	}
+
+	private void makeAnimationView(GroupNode group) {
+		final GroupView usedView = groupsViews.remove(group);
+		animationsViews.put(group, usedView);
+	}
+
+	private void removeAnimationView(GroupNode group) {
+		final GroupView removedView = animationsViews.remove(group);
+		removeView(removedView);
 	}
 
 	private void updateChilds() {
@@ -131,14 +140,11 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	@Override
 	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
-		GroupView view = new GroupView(getContext());
-		addGroupView(view, a);
-
-		view = new GroupView(getContext());
-		addGroupView(view, b);
+		addGroupView(a);
+		addGroupView(b);
 
 		if (breakingAnimationEnabled) {
-			startBreakingAnimation(removedGroup, a, b);
+			//startBreakingAnimation(removedGroup, a, b);
 		} else {
 			removeGroupView(removedGroup);
 		}
@@ -146,8 +152,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		GroupView composedView = new GroupView(getContext());
-		addGroupView(composedView, composedGroup);
+		GroupView composedView = addGroupView(composedGroup);
 		composedView.bringToFront();
 
 		if (composingAnimationEnabled) {
@@ -160,6 +165,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	private void startComposingAnimation(GroupNode composedGroup, GroupNode a, GroupNode b) {
 		final ComposingAnimation animation = new ComposingAnimation(composedGroup, a, b);
+		makeAnimationView(a);
+		makeAnimationView(b);
 		stopAnimation(animation.aView);
 		stopAnimation(animation.bView);
 		animations.add(animation);
@@ -223,8 +230,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 		@Override
 		void cleanUp() {
-			removeGroupView(a);
-			removeGroupView(b);
+			removeAnimationView(a);
+			removeAnimationView(b);
 			jointGroupView.setTag(null);
 			animations.remove(this);
 		}
@@ -372,7 +379,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	@Override
 	public void onGroup3(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		GroupView composedView = new GroupView(getContext());
+		GroupView composedView = newView();
 		groupsViews.put(composedGroup, composedView);
 		if (composingAnimationEnabled) {
 			setViewData(composedView, composedGroup);
@@ -458,7 +465,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		float initPos = removedGroup.getAbsolutePos(getHeight());
 
 
-		GroupView newView = new GroupView(getContext());
+		GroupView newView = newView();
 		addView(newView, 0);
 		groupsViews.put(a, newView);
 		if (breakingAnimationEnabled) {
@@ -466,7 +473,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			setViewData(newView, a);
 		}
 
-		newView = new GroupView(getContext());
+		newView = newView();
 		addView(newView, 0);
 		groupsViews.put(b, newView);
 		if (breakingAnimationEnabled) {
@@ -568,4 +575,16 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			return new Both<>(first, second);
 		}
 	}*/
+
+	GroupView newView(GroupNode group) {
+		final GroupView view = new GroupView(getContext());
+
+		if (group.isLeaf()) {
+			view.setModel(group.getData());
+		} else {
+			view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
+		}
+
+		return view;
+	}
 }
