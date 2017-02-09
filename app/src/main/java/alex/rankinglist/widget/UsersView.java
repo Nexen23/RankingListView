@@ -131,15 +131,17 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	@Override
 	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
-		final GroupView removedView = groupsViews.get(removedGroup);
-		stopAnimation(removedView);
-		removeGroupView(removedGroup);
-
 		GroupView view = new GroupView(getContext());
 		addGroupView(view, a);
 
 		view = new GroupView(getContext());
 		addGroupView(view, b);
+
+		if (breakingAnimationEnabled) {
+			startBreakingAnimation(removedGroup, a, b);
+		} else {
+			removeGroupView(removedGroup);
+		}
 	}
 
 	@Override
@@ -157,26 +159,65 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	private void startComposingAnimation(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		final ComposingAnimation composingAnimation = new ComposingAnimation(composedGroup, a, b);
-		stopAnimation(composingAnimation.aView);
-		stopAnimation(composingAnimation.bView);
-		animations.add(composingAnimation);
+		final ComposingAnimation animation = new ComposingAnimation(composedGroup, a, b);
+		stopAnimation(animation.aView);
+		stopAnimation(animation.bView);
+		animations.add(animation);
 
-		composingAnimation.jointGroupView.setTag(composingAnimation);
-		composingAnimation.start();
+		animation.jointGroupView.setTag(animation);
+		animation.start();
+	}
+
+	private void startBreakingAnimation(GroupNode removedGroup, GroupNode a, GroupNode b) {
+		final BreakingAnimation animation = new BreakingAnimation(removedGroup, a, b);
+		stopAnimation(animation.aView);
+		stopAnimation(animation.bView);
+		animations.add(animation);
+
+		animation.aView.setTag(animation);
+		animation.bView.setTag(animation);
+		animation.start();
 	}
 
 	private void stopAnimation(GroupView view) {
 		if (anyAnimationEnabled && view.getTag() != null) {
 			final GroupingAnimation animation = (GroupingAnimation) view.getTag();
-			view.animate().cancel();
 			animation.cancel();
+			view.animate().cancel();
 			animations.remove(animation);
 		}
 	}
 
+	class BreakingAnimation extends GroupingAnimation {
+		BreakingAnimation(GroupNode composedGroup, GroupNode a, GroupNode b) {
+			super(composedGroup, a, b);
+		}
+
+		@Override
+		void cleanUp() {
+			removeGroupView(jointGroup);
+			aView.setTag(null);
+			bView.setTag(null);
+			animations.remove(this);
+		}
+
+		@Override
+		void update() {
+			updatePosition(aView, a);
+			updatePosition(bView, b);
+		}
+
+		void updatePosition(ViewGroup view, GroupNode thisGroup) {
+			final float fromPos = jointGroup.getAbsolutePos(getHeight());
+			final float toPos = thisGroup.getAbsolutePos(getHeight());
+			final float distance = toPos - fromPos;
+
+			view.setY(fromPos + distance * animatedValue);
+		}
+	}
+
 	class ComposingAnimation extends GroupingAnimation {
-		private ComposingAnimation(GroupNode composedGroup, GroupNode a, GroupNode b) {
+		ComposingAnimation(GroupNode composedGroup, GroupNode a, GroupNode b) {
 			super(composedGroup, a, b);
 		}
 
@@ -185,12 +226,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			removeGroupView(a);
 			removeGroupView(b);
 			jointGroupView.setTag(null);
-		}
-
-		@Override
-		void setAnimatedValue(float animatedValue) {
-			super.setAnimatedValue(animatedValue);
-			update();
+			animations.remove(this);
 		}
 
 		@Override
@@ -249,8 +285,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			jointGroupView.animate().cancel();
 		}
 
-		void setAnimatedValue(float animatedValue) {
+		final void setAnimatedValue(float animatedValue) {
 			this.animatedValue = animatedValue;
+			update();
 		}
 
 		abstract void cleanUp();
