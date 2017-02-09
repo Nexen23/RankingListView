@@ -37,8 +37,8 @@ public class RandomUtil {
 //			users.add(new User(GenerateName(), 20));
 //			users.add(new User(GenerateName(), 47));
 //
-//			users.add(new User(GenerateName(), 80));
-//			users.add(new User(GenerateName(), 85));
+			users.add(new User(GenerateName(), 80));
+			users.add(new User(GenerateName(), 85));
 //			users.add(new User(GenerateName(), 75));
 		} else {
 			for (int i = 0; i < count; ++i) {

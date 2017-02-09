@@ -6,6 +6,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
@@ -47,9 +48,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	void init() {
 		//fadeDuration = getResources().getInteger(R.integer.animation_fast_duration);
-		//moveDuration = getResources().getInteger(R.integer.animation_slow_duration);
-		fadeDuration = 1500;
-		moveDuration = 3000;
+		//moveDuration = getResources().getInteger(R.integer.animation_fast_duration);
+		fadeDuration = 150;
+		//moveDuration = 3000;
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 		groupedList.addListener(this);
 	}
@@ -89,11 +90,86 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 	}
 
+	boolean composingAnimationEnabled = true;
+
+	void setComposeAnimation(final View view, final GroupNode a, float finalPos) {
+		float finalNormalizedPos = finalPos / getHeight();
+		ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
+		view.setTag(new AnimationData(animator, a, finalNormalizedPos, false));
+
+		animator.setDuration(fadeDuration).setInterpolator(new LinearInterpolator());
+		animator.addUpdateListener(animation -> {
+			final AnimationData tag = (AnimationData) view.getTag();
+			tag.setAnimatedValue(((float) animation.getAnimatedValue()));
+			tag.updateY(view);
+		});
+		animator.addListener(new Animator.AnimatorListener() {
+			@Override
+			public void onAnimationStart(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				animatedViews.remove(view);
+				removeView(view);
+				final AnimationData tag = (AnimationData) view.getTag();
+				tag.setAnimatedValue(1);
+				tag.updateY(view);
+				view.setTag(null);
+			}
+
+			@Override
+			public void onAnimationCancel(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationRepeat(Animator animation) {
+
+			}
+		});
+		animator.start();
+	}
+
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		removeView(groupsViews.remove(a));
-		GroupView recycledView = groupsViews.remove(b);
-		groupsViews.put(composedGroup, recycledView);
+		GroupView composedView = new GroupView(getContext());
+		groupsViews.put(composedGroup, composedView);
+		if (composingAnimationEnabled) {
+			setViewModel(composedView, composedGroup);
+			composedView.setAlpha(0);
+			composedView.animate()
+					.alpha(1)
+					.setDuration(fadeDuration)
+					//.setInterpolator(new LinearInterpolator());
+					.setInterpolator(new DecelerateInterpolator());
+		}
+
+		float finalPos = composedGroup.getAbsolutePos(getHeight());
+
+		setComposingAnimationForLeaf(a, finalPos);
+		setComposingAnimationForLeaf(b, finalPos);
+
+
+		addView(composedView, 0);
+		composedView.bringToFront();
+	}
+
+	void setComposingAnimationForLeaf(final GroupNode node, float finalPos) {
+		final GroupView view = groupsViews.remove(node);
+		setViewModel(view, node);
+		if (composingAnimationEnabled) {
+			view.animate().cancel();
+			if (view.getTag() instanceof AnimationData) {
+				((AnimationData) view.getTag()).animator.cancel();
+			}
+
+			animatedViews.add(view);
+			setComposeAnimation(view, node, finalPos);
+		} else {
+			removeView(view);
+		}
 	}
 
 	boolean breakingAnimationEnabled = false;
@@ -109,7 +185,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			removedView.animate()
 					.alpha(0)
 					.setDuration(fadeDuration)
-					.setInterpolator(new LinearInterpolator())
+					.setInterpolator(new DecelerateInterpolator())
 					.withEndAction(() -> {
 						removeView(removedView);
 						animatedViews.remove(removedView);
@@ -198,8 +274,15 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 
 		for (View view : animatedViews) {
-			final GroupNode group = (GroupNode) view.getTag();
-			view.setY(group.getAbsolutePos(getHeight()));
+			if (view.getTag() instanceof AnimationData) {
+				final AnimationData tag = (AnimationData) view.getTag();
+				tag.updateY(view);
+			} else if (view.getTag() instanceof GroupNode) {
+				final GroupNode group = (GroupNode) view.getTag();
+				view.setY(group.getAbsolutePos(getHeight()));
+			} else {
+				throw new IllegalStateException("all animated views should have tag of GroupNode or AnimationData -type");
+			}
 		}
 	}
 
@@ -213,14 +296,22 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	class AnimationData {
 		public GroupNode group;
-		public float initNormalizedPos;
+		public float normalizedPos;
 		public Animator animator;
 		private float animatedValue;
+		private boolean posIsInit = true; // or final
 
-		public AnimationData(Animator animator, GroupNode group, float initNormalizedPos) {
+		public AnimationData(Animator animator, GroupNode group, float normalizedPos) {
 			this.animator = animator;
 			this.group = group;
-			this.initNormalizedPos = initNormalizedPos;
+			this.normalizedPos = normalizedPos;
+		}
+
+		public AnimationData(Animator animator, GroupNode group, float normalizedPos, boolean posIsInit) {
+			this.animator = animator;
+			this.group = group;
+			this.normalizedPos = normalizedPos;
+			this.posIsInit = posIsInit;
 		}
 
 		public void setAnimatedValue(float animatedValue) {
@@ -229,10 +320,10 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 		public void updateY(View view) {
 			final float shouldBeAbsolutePos = group.getAbsolutePos(getHeight());
-			final float initAbsolutePos = getHeight() * initNormalizedPos;
-			final float distance = initAbsolutePos - shouldBeAbsolutePos;
+			final float absolutePos = getHeight() * normalizedPos;
+			final float distance = absolutePos - shouldBeAbsolutePos;
 
-			view.setY(initAbsolutePos - distance * animatedValue);
+			view.setY((posIsInit ? absolutePos : shouldBeAbsolutePos) - distance * animatedValue * (posIsInit ? 1 : -1));
 			//LogUtil.d(this, "ANIMATION:: %.2f", animatedValue);
 		}
 	}
