@@ -51,7 +51,7 @@
 
 		</FrameLayout>
 
-		<alex.rankinglist.widget.UsersView
+		<alex.rankinglist.widget.users.UsersView
 			android:id="@+id/l_users"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"

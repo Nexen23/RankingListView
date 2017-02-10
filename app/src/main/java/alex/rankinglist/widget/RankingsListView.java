@@ -137,7 +137,7 @@ public class RankingsListView extends ScrollView {
 	}
 
 	private void updateScrollPosition() {
-		// postpones scroll due to actual height will changed after onLayout(), so scrollPos may be out of view bounds
+		// HACK: postpones scroll due to actual height will changed after onLayout(), so scrollPos may be out of view bounds
 		if (nextScrollPos != null) {
 			setScrollY(nextScrollPos.intValue());
 			nextScrollPos = null;

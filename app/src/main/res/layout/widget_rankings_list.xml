@@ -3,7 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools">
 
-	<!-- can't change height of direct child, so extra FrameLayout here -->
+	<!-- HACK: can't change height of direct child, so extra FrameLayout here -->
 	<FrameLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">

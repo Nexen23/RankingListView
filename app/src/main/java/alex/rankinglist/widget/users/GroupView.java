@@ -1,4 +1,4 @@
-package alex.rankinglist.widget;
+package alex.rankinglist.widget.users;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
