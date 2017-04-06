@@ -13,7 +13,6 @@ import junit.framework.Assert;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupNode;
@@ -51,7 +50,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	void init() {
-		animationsDuration = 500;//getResources().getInteger(R.integer.animation_fast_duration);
+		animationsDuration = getResources().getInteger(R.integer.animation_fast_duration);
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
 
@@ -88,12 +87,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		if (isVisibleOnScreen) {
-			for (Map.Entry<GroupNode, GroupView> entry : groupsViews.entrySet()) {
-				GroupView child = entry.getValue();
+			for (GroupView child : childsViews) {
 				if (isChildVisible(child)) {
-					canvas.translate(0.0f, child.getY());
-					child.draw(canvas);
-					canvas.translate(0.0f, -child.getY());
+					drawChild(canvas, child, getDrawingTime());
 				}
 			}
 		}
@@ -102,7 +98,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	public void onVisibleFrameChanged() {
 		isVisibleOnScreen = getLocalVisibleRect(visibleRect);
 		if (isVisibleOnScreen) {
-			invalidate(visibleRect);
+			invalidate();
 		}
 	}
 
@@ -154,6 +150,11 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	void removeAnimationView(GroupNode group) {
 		final GroupView removedView = animationsViews.remove(group);
 		childsViews.remove(removedView);
+	}
+
+	void bringChildToFront(GroupView child) {
+		childsViews.remove(child);
+		childsViews.add(child);
 	}
 
 	private GroupView addGroupView(GroupNode group) {
@@ -214,9 +215,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private void layoutChilds(int left, int top, int right, int bottom) {
 		if (isVisibleOnScreen) {
 			for (GroupView child : childsViews) {
-				if (isChildVisible(child)) {
+				//if (isChildVisible(child)) {
 					layoutChild(child, left, top, right, bottom);
-				}
+				//}
 			}
 		}
 	}
