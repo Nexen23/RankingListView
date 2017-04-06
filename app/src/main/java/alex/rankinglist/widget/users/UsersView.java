@@ -34,6 +34,10 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	LinkedList<GroupingAnimation> animations = new LinkedList<>();
 	LinkedList<GroupView> childsViews = new LinkedList<>();
 
+	private final float VIEWS_POOL_SIZE_INCREMENT_FACTOR = 1.8f;
+	private final int VIEWS_POOL_SIZE_INIT = 15;
+	private final LinkedList<GroupView> viewsPool = new LinkedList<>();
+
 	public UsersView(Context context) {
 		super(context);
 		init();
@@ -101,6 +105,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	public void setModel(Rank rank, List<User> users) {
 		childsViews.clear();
+		viewsPool.clear();
 		this.rank = rank;
 		groupedList.setData(rank, users);
 	}
@@ -155,16 +160,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	private GroupView addGroupView(GroupNode group) {
-		final GroupView view = new GroupView(getContext());
-		view.setLayoutParams(generateDefaultLayoutParams());
-
-		if (group.isLeaf()) {
-			view.setModel(group.getData());
-		} else {
-			view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
-		}
-		measureAndLayoutChild(view);
-
+		final GroupView view = getSpareGroupView();
+		setChildData(view, group);
 		groupsViews.put(group, view);
 		childsViews.add(view);
 		return view;
@@ -194,6 +191,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		if (!didInitViews) {
 			didInitViews = true; // skip first grouping events
 
+			fillViewsPoolWith(VIEWS_POOL_SIZE_INIT);
+
 			for (GroupNode group : groupedList) {
 				addGroupView(group);
 			}
@@ -207,7 +206,34 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 				visibleRect.right, (int)(child.getY() + child.getMeasuredHeight()));
 	}
 
+	private void setChildData(GroupView view, GroupNode group) {
+		if (group.isLeaf()) {
+			view.setModel(group.getData());
+		} else {
+			view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
+		}
+		measureAndLayoutChild(view);
+	}
+
+	private void fillViewsPoolWith(int newViewsCount) {
+		for (int i = 0; i < newViewsCount; ++i) {
+			viewsPool.add(new GroupView(getContext()));
+		}
+	}
+
+	private GroupView getSpareGroupView() {
+		if (viewsPool.isEmpty()) {
+			final int newViewsCount = (int) Math.ceil(
+					Math.max(VIEWS_POOL_SIZE_INIT, childsViews.size()) * VIEWS_POOL_SIZE_INCREMENT_FACTOR);
+			fillViewsPoolWith(newViewsCount);
+		}
+
+		return viewsPool.pop();
+	}
+
 	private void measureAndLayoutChild(GroupView child) {
+		child.setLayoutParams(generateDefaultLayoutParams());
+
 		int widthSpec = MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY);
 		int heightSpec = MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.AT_MOST);
 		measureChildWithMargins(child, widthSpec, 0, heightSpec, 0);
