@@ -81,11 +81,13 @@ abstract class GroupingAnimation {
 		updateTwainView(height, aView, a);
 		updateTwainView(height, bView, b);
 		jointGroupView.setY(jointGroup.getAbsolutePos(height));
+		usersView.invalidate();
 	}
 
 	@CallSuper
 	protected void cleanUp() {
 		usersView.animations.remove(this);
+		usersView.invalidate();
 	}
 
 	protected abstract void updateTwainView(int space, GroupView view, GroupNode group);

@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -85,6 +86,15 @@ public class RankingsListView extends ScrollView {
 		updateChildsSharedHeight();
 		super.onLayout(changed, l, t, r, b);
 		updateScrollPosition();
+	}
+
+	@Override
+	protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+		super.onScrollChanged(l, t, oldl, oldt);
+		for (int i = 0, n = binding.lRankings.getChildCount(); i < n; ++i) {
+			final RankingView rankingView = (RankingView) binding.lRankings.getChildAt(i);
+			rankingView.onVisibleFrameChanged();
+		}
 	}
 
 	public void setModel(List<Rank> ranks, List<User> users) {
