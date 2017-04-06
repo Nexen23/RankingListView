@@ -70,8 +70,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 			updateChilds();
 			updateAnimations();
-
-			measureChilds(w, h);
 		}
 		onVisibleFrameChanged();
 	}
@@ -80,7 +78,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		LogUtil.d(this, "onLayout()");
 		super.onLayout(changed, left, top, right, bottom);
-		layoutChilds(left, top, right, bottom);
 	}
 
 	@Override
@@ -166,6 +163,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		} else {
 			view.setModel(group.getData(), group.getItemsCount(), group.getAvgScore(rank));
 		}
+		measureAndLayoutChild(view);
 
 		groupsViews.put(group, view);
 		childsViews.add(view);
@@ -203,29 +201,18 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 	}
 
-	private void measureChilds(int w, int h) {
-		int widthSpec = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY);
-		int heightSpec = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY);
-
-		for (GroupView child : childsViews) {
-			measureChildWithMargins(child, widthSpec, 0, heightSpec, 0);
-		}
-	}
-
-	private void layoutChilds(int left, int top, int right, int bottom) {
-		if (isVisibleOnScreen) {
-			for (GroupView child : childsViews) {
-				//if (isChildVisible(child)) {
-					layoutChild(child, left, top, right, bottom);
-				//}
-			}
-		}
-	}
-
 	private boolean isChildVisible(GroupView child) {
 		return visibleRect.intersects(
 				visibleRect.left, (int)child.getY(),
 				visibleRect.right, (int)(child.getY() + child.getMeasuredHeight()));
+	}
+
+	private void measureAndLayoutChild(GroupView child) {
+		int widthSpec = MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY);
+		int heightSpec = MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.AT_MOST);
+		measureChildWithMargins(child, widthSpec, 0, heightSpec, 0);
+
+		layoutChild(child, 0, 0, getWidth(), getHeight());
 	}
 
 	private void layoutChild(GroupView child, int left, int top, int right, int bottom) {
