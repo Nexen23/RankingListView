@@ -37,6 +37,7 @@ public class GroupView extends FrameLayout {
 		binding.tvRank.setText(String.format("%.2f%%", groupScore));
 		if (groupSize > 1) {
 			binding.tvGroupSize.setVisibility(VISIBLE);
+			groupSize = Math.min(groupSize, 99);
 			binding.tvGroupSize.setText(String.format("+%d", groupSize));
 		} else {
 			binding.tvGroupSize.setVisibility(GONE);
