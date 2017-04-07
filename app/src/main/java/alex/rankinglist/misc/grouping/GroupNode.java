@@ -88,6 +88,14 @@ public class GroupNode extends EventsSource<GroupNode.Events> implements Compara
 		return rightNode;
 	}
 
+	public GroupNode getPrev() {
+		return prev;
+	}
+
+	public GroupNode getNext() {
+		return next;
+	}
+
 	public boolean isLeaf() {
 		return leftNode == null && rightNode == null;
 	}

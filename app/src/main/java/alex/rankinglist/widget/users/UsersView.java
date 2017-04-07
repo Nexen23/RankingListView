@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
+import android.support.annotation.Px;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.widget.FrameLayout;
@@ -30,9 +31,12 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	private boolean composingAnimationEnabled = true, breakingAnimationEnabled = true;
 	int animationsDuration;
+	@Px int viewHeight;
 	HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(), animationsViews = new HashMap<>();
 	LinkedList<GroupingAnimation> animations = new LinkedList<>();
-	LinkedList<GroupView> childsViews = new LinkedList<>();
+
+	LinkedList<GroupView> childsViews = new LinkedList<>(), visibleChilds = new LinkedList<>();
+	GroupNode firstVisibleGroup = null, lastVisibleGroup = null;
 
 	private final float VIEWS_POOL_SIZE_INCREMENT_FACTOR = 1.8f;
 	private final int VIEWS_POOL_SIZE_INIT = 15;
@@ -55,6 +59,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	void init() {
 		animationsDuration = getResources().getInteger(R.integer.animation_fast_duration);
+		viewHeight = getResources().getDimensionPixelSize(R.dimen.group_view_height);
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
 
@@ -70,12 +75,14 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
 			initViewsIfNeeded();
+			onVisibleFrameChanged();
 			Assert.assertEquals(0, getChildCount());
 
 			updateChilds();
 			updateAnimations();
+		} else {
+			onVisibleFrameChanged();
 		}
-		onVisibleFrameChanged();
 	}
 
 	@Override
@@ -99,8 +106,17 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	public void onVisibleFrameChanged() {
 		isVisibleOnScreen = getLocalVisibleRect(visibleRect);
 		if (isVisibleOnScreen) {
+			updateVisibleGroups();
 			invalidate();
+		} else {
+			firstVisibleGroup = null;
+			lastVisibleGroup = null;
 		}
+
+		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s",
+				rank.scoreMin, rank.scoreMax,
+				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
+				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name);
 	}
 
 	public void setModel(Rank rank, List<User> users) {
@@ -117,6 +133,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		addGroupView(a);
 		addGroupView(b);
 
+		updateVisibleGroupsOnBreak(removedGroup, a, b);
+
 		if (composingAnimationEnabled) {
 			GroupingAnimation.Stop(removedView);
 		}
@@ -131,6 +149,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
 		addGroupView(composedGroup);
+
+		updateVisibleGroupsOnGroup(composedGroup, a, b);
 
 		if (breakingAnimationEnabled) {
 			GroupingAnimation.Stop(groupsViews.get(a), groupsViews.get(b));
@@ -170,6 +190,69 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private void removeGroupView(GroupNode group) {
 		final GroupView removedView = groupsViews.remove(group);
 		childsViews.remove(removedView);
+	}
+
+	private void updateVisibleGroups() {
+		final int height = getHeight();
+		if (firstVisibleGroup == null) {
+			for (GroupNode group : groupedList) {
+				if (firstVisibleGroup == null) {
+					if (isGroupVisible(group, height)) {
+						firstVisibleGroup = group;
+						lastVisibleGroup = group;
+					}
+				} else {
+					if (!isGroupVisible(group, height)) {
+						break;
+					}
+					lastVisibleGroup = group;
+				}
+			}
+		} else {
+			// Expand
+			while (isGroupVisible(firstVisibleGroup, height) && firstVisibleGroup.getPrev() != null) {
+				firstVisibleGroup = firstVisibleGroup.getPrev();
+			}
+
+			while (isGroupVisible(lastVisibleGroup, height) && lastVisibleGroup.getNext() != null) {
+				lastVisibleGroup = lastVisibleGroup.getNext();
+			}
+
+			// Shrink
+			while (firstVisibleGroup != null && !isGroupVisible(firstVisibleGroup, height)) {
+				firstVisibleGroup = firstVisibleGroup.getNext();
+			}
+
+			while (lastVisibleGroup != null && !isGroupVisible(lastVisibleGroup, height)) {
+				lastVisibleGroup = lastVisibleGroup.getPrev();
+			}
+		}
+	}
+
+	private void updateVisibleGroupsOnBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
+		if (firstVisibleGroup == removedGroup) {
+			firstVisibleGroup = a;
+		}
+
+		if (lastVisibleGroup == removedGroup) {
+			lastVisibleGroup = b;
+		}
+	}
+
+	private void updateVisibleGroupsOnGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
+		if (firstVisibleGroup == a) {
+			firstVisibleGroup = composedGroup;
+		}
+
+		if (lastVisibleGroup == b) {
+			lastVisibleGroup = composedGroup;
+		}
+	}
+
+	private boolean isGroupVisible(@Nullable GroupNode group, int height) {
+		final Float groupPos = group.getAbsolutePos(height);
+		return (groupPos + viewHeight) >= visibleRect.top &&
+				groupPos <= visibleRect.bottom;
 	}
 
 	private void updateChilds() {
