@@ -9,8 +9,6 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 
-import junit.framework.Assert;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,21 +24,16 @@ import alex.rankinglist.widget.model.User;
 public class UsersView extends FrameLayout implements GroupedList.EventsListener {
 	private Rank rank;
 	private GroupedList groupedList;
-	private boolean didInitViews = false, isVisibleOnScreen = true;
+	private boolean didSkipFirstGroupingEvents = false;
 	private Rect visibleRect = new Rect();
 
-	private boolean composingAnimationEnabled = true, breakingAnimationEnabled = true;
+	private boolean composingAnimationEnabled = false, breakingAnimationEnabled = false;
 	int animationsDuration;
 	@Px int viewHeight;
 	HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(), animationsViews = new HashMap<>();
 	LinkedList<GroupingAnimation> animations = new LinkedList<>();
-
-	LinkedList<GroupView> childsViews = new LinkedList<>(), visibleChilds = new LinkedList<>();
 	GroupNode firstVisibleGroup = null, lastVisibleGroup = null;
-
-	private final float VIEWS_POOL_SIZE_INCREMENT_FACTOR = 1.8f;
-	private final int VIEWS_POOL_SIZE_INIT = 15;
-	private final LinkedList<GroupView> viewsPool = new LinkedList<>();
+	final LinkedList<GroupView> viewsPool = new LinkedList<>();
 
 	public UsersView(Context context) {
 		super(context);
@@ -74,14 +67,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
-			initViewsIfNeeded();
-			onVisibleFrameChanged();
-			Assert.assertEquals(0, getChildCount());
-
-			updateChilds();
-			updateAnimations();
-		} else {
-			onVisibleFrameChanged();
+			registerGroupingEventsListener();
 		}
 	}
 
@@ -89,38 +75,46 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		LogUtil.d(this, "onLayout()");
 		super.onLayout(changed, left, top, right, bottom);
+		onVisibleFrameChanged();
 	}
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
-		if (isVisibleOnScreen) {
-			for (GroupView child : childsViews) {
-				if (isChildVisible(child)) {
-					drawChild(canvas, child, getDrawingTime());
-				}
+		if (isVisibleOnScreen()) {
+			GroupNode group = firstVisibleGroup;
+			while (group != lastVisibleGroup.getNext()) {
+				drawChild(canvas, getGroupView(group), getDrawingTime());
+				group = group.getNext();
 			}
 		}
 	}
 
 	public void onVisibleFrameChanged() {
-		isVisibleOnScreen = getLocalVisibleRect(visibleRect);
-		if (isVisibleOnScreen) {
+		final boolean isVisible = getLocalVisibleRect(visibleRect);
+		if (isVisible) {
 			updateVisibleGroups();
+			if (isVisibleOnScreen()) {
+				updateChilds();
+				updateAnimations();
+			}
 			invalidate();
 		} else {
 			firstVisibleGroup = null;
 			lastVisibleGroup = null;
 		}
 
-		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s",
+		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: \tvisible=%s, rect=%s",
 				rank.scoreMin, rank.scoreMax,
 				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
-				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name);
+				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name,
+				isVisible, visibleRect.toShortString());
 	}
 
 	public void setModel(Rank rank, List<User> users) {
-		childsViews.clear();
+		didSkipFirstGroupingEvents = false;
+		firstVisibleGroup = null;
+		lastVisibleGroup = null;
 		viewsPool.clear();
 		this.rank = rank;
 		groupedList.setData(rank, users);
@@ -128,14 +122,14 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	@Override
 	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
-		final GroupView removedView = groupsViews.get(removedGroup);
+		/*final GroupView removedView = groupsViews.get(removedGroup);
 
 		addGroupView(a);
-		addGroupView(b);
+		addGroupView(b);*/
 
 		updateVisibleGroupsOnBreak(removedGroup, a, b);
 
-		if (composingAnimationEnabled) {
+		/*if (composingAnimationEnabled) {
 			GroupingAnimation.Stop(removedView);
 		}
 
@@ -143,16 +137,16 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			BreakingAnimation.Start(this, removedGroup, a, b);
 		} else {
 			removeGroupView(removedGroup);
-		}
+		}*/
 	}
 
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		addGroupView(composedGroup);
+		//addGroupView(composedGroup);
 
 		updateVisibleGroupsOnGroup(composedGroup, a, b);
 
-		if (breakingAnimationEnabled) {
+		/*if (breakingAnimationEnabled) {
 			GroupingAnimation.Stop(groupsViews.get(a), groupsViews.get(b));
 		}
 
@@ -161,25 +155,25 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		} else {
 			removeGroupView(a);
 			removeGroupView(b);
-		}
+		}*/
 	}
 
 	void makeAnimationView(GroupNode group) {
-		final GroupView usedView = groupsViews.remove(group);
-		animationsViews.put(group, usedView);
+		/*final GroupView usedView = groupsViews.remove(group);
+		animationsViews.put(group, usedView);*/
 	}
 
 	void removeAnimationView(GroupNode group) {
-		final GroupView removedView = animationsViews.remove(group);
-		childsViews.remove(removedView);
+		/*final GroupView removedView = animationsViews.remove(group);
+		childsViews.remove(removedView);*/
 	}
 
 	void bringChildToFront(GroupView child) {
-		childsViews.remove(child);
-		childsViews.add(child);
+		/*childsViews.remove(child);
+		childsViews.add(child);*/
 	}
 
-	private GroupView addGroupView(GroupNode group) {
+	/*private GroupView addGroupView(GroupNode group) {
 		final GroupView view = getSpareGroupView();
 		setChildData(view, group);
 		groupsViews.put(group, view);
@@ -190,11 +184,11 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private void removeGroupView(GroupNode group) {
 		final GroupView removedView = groupsViews.remove(group);
 		childsViews.remove(removedView);
-	}
+	}*/
 
 	private void updateVisibleGroups() {
 		final int height = getHeight();
-		if (firstVisibleGroup == null) {
+		if (!isVisibleOnScreen()) {
 			for (GroupNode group : groupedList) {
 				if (firstVisibleGroup == null) {
 					if (isGroupVisible(group, height)) {
@@ -210,11 +204,11 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			}
 		} else {
 			// Expand
-			while (isGroupVisible(firstVisibleGroup, height) && firstVisibleGroup.getPrev() != null) {
+			while (firstVisibleGroup.getPrev() != null && isGroupVisible(firstVisibleGroup.getPrev(), height)) {
 				firstVisibleGroup = firstVisibleGroup.getPrev();
 			}
 
-			while (isGroupVisible(lastVisibleGroup, height) && lastVisibleGroup.getNext() != null) {
+			while (lastVisibleGroup.getNext() != null && isGroupVisible(lastVisibleGroup.getNext(), height)) {
 				lastVisibleGroup = lastVisibleGroup.getNext();
 			}
 
@@ -226,10 +220,17 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			while (lastVisibleGroup != null && !isGroupVisible(lastVisibleGroup, height)) {
 				lastVisibleGroup = lastVisibleGroup.getPrev();
 			}
+
+			if (firstVisibleGroup == null || lastVisibleGroup == null) {
+				firstVisibleGroup = null;
+				lastVisibleGroup = null;
+			}
 		}
 	}
 
 	private void updateVisibleGroupsOnBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
+		releaseGroupView(removedGroup);
+
 		if (firstVisibleGroup == removedGroup) {
 			firstVisibleGroup = a;
 		}
@@ -240,11 +241,14 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	private void updateVisibleGroupsOnGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		if (firstVisibleGroup == a) {
+		releaseGroupView(a);
+		releaseGroupView(b);
+
+		if (firstVisibleGroup == a || firstVisibleGroup == b) {
 			firstVisibleGroup = composedGroup;
 		}
 
-		if (lastVisibleGroup == b) {
+		if (lastVisibleGroup == a || lastVisibleGroup == b) {
 			lastVisibleGroup = composedGroup;
 		}
 	}
@@ -256,11 +260,13 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	private void updateChilds() {
-		for (GroupNode group : groupedList) {
-			GroupView view = groupsViews.get(group);
+		GroupNode group = firstVisibleGroup;
+		while (group != lastVisibleGroup.getNext()) {
+			GroupView view = getGroupView(group);
 			if (view.getTag() == null) {
 				view.setY(group.getAbsolutePos(getHeight()));
 			}
+			group = group.getNext();
 		}
 	}
 
@@ -270,23 +276,15 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 	}
 
-	private void initViewsIfNeeded() {
-		if (!didInitViews) {
-			didInitViews = true; // skip first grouping events
-
-			fillViewsPoolWith(VIEWS_POOL_SIZE_INIT);
-
-			for (GroupNode group : groupedList) {
-				addGroupView(group);
-			}
+	private void registerGroupingEventsListener() {
+		if (!didSkipFirstGroupingEvents) {
+			didSkipFirstGroupingEvents = true;
 			groupedList.addListener(this);
 		}
 	}
 
-	private boolean isChildVisible(GroupView child) {
-		return visibleRect.intersects(
-				visibleRect.left, (int)child.getY(),
-				visibleRect.right, (int)(child.getY() + child.getMeasuredHeight()));
+	private boolean isVisibleOnScreen() {
+		return firstVisibleGroup != null;
 	}
 
 	private void setChildData(GroupView view, GroupNode group) {
@@ -298,25 +296,34 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		measureAndLayoutChild(view);
 	}
 
-	private void fillViewsPoolWith(int newViewsCount) {
-		for (int i = 0; i < newViewsCount; ++i) {
-			viewsPool.add(new GroupView(getContext()));
+	private GroupView getGroupView(GroupNode group) {
+		GroupView view = groupsViews.get(group);
+		if (view == null) {
+			view = getSpareGroupView();
+			groupsViews.put(group, view);
+			setChildData(view, group);
 		}
+		return view;
 	}
 
 	private GroupView getSpareGroupView() {
 		if (viewsPool.isEmpty()) {
-			final int newViewsCount = (int) Math.ceil(
-					Math.max(VIEWS_POOL_SIZE_INIT, childsViews.size()) * VIEWS_POOL_SIZE_INCREMENT_FACTOR);
-			fillViewsPoolWith(newViewsCount);
+			final GroupView view = new GroupView(getContext());
+			view.setLayoutParams(generateDefaultLayoutParams());
+			return view;
+		} else {
+			return viewsPool.pop();
 		}
+	}
 
-		return viewsPool.pop();
+	private void releaseGroupView(GroupNode group) {
+		GroupView view = groupsViews.remove(group);
+		if (view != null) {
+			viewsPool.add(view);
+		}
 	}
 
 	private void measureAndLayoutChild(GroupView child) {
-		child.setLayoutParams(generateDefaultLayoutParams());
-
 		int widthSpec = MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY);
 		int heightSpec = MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.AT_MOST);
 		measureChildWithMargins(child, widthSpec, 0, heightSpec, 0);
