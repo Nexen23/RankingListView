@@ -67,7 +67,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		LogUtil.d(this, "onSizeChanged()");
 		super.onSizeChanged(w, h, oldw, oldh);
 		if (groupedList.setSpace(h)) {
-			registerGroupingEventsListener();
+			registerGroupingEventsListenerIfNeeded();
 		}
 	}
 
@@ -276,7 +276,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 	}
 
-	private void registerGroupingEventsListener() {
+	private void registerGroupingEventsListenerIfNeeded() {
 		if (!didSkipFirstGroupingEvents) {
 			didSkipFirstGroupingEvents = true;
 			groupedList.addListener(this);
