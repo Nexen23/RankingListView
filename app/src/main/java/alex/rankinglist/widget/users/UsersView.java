@@ -75,7 +75,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		LogUtil.d(this, "onLayout()");
 		super.onLayout(changed, left, top, right, bottom);
-		onVisibleFrameChanged();
 	}
 
 	@Override
@@ -92,6 +91,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	public void onVisibleFrameChanged() {
 		final boolean isVisible = getLocalVisibleRect(visibleRect);
+
 		if (isVisible) {
 			updateVisibleGroups();
 			if (isVisibleOnScreen()) {
