@@ -5,8 +5,8 @@ import alex.rankinglist.misc.grouping.GroupNode;
 class ComposingAnimation extends GroupingAnimation {
 	protected ComposingAnimation(UsersView usersView, GroupNode composedGroup, GroupNode a, GroupNode b) {
 		super(usersView, composedGroup, a, b);
-		usersView.makeAnimationView(a);
-		usersView.makeAnimationView(b);
+		usersView.makeBackAnimationView(a);
+		usersView.makeBackAnimationView(b);
 		jointGroupView.setTag(this);
 	}
 

@@ -94,6 +94,11 @@ public class RankingView extends FrameLayout {
 		this.sharedHeight = imaginaryHeight;
 	}
 
+
+	public void onVisibleFrameChanged() {
+		binding.lUsers.onVisibleFrameChanged();
+	}
+
 	private void setUsers(Rank rank, List<User> users) {
 		binding.lUsers.setModel(rank, users);
 	}

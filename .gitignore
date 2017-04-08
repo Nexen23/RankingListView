@@ -98,3 +98,9 @@ captures/
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 
+/_Article/
+.idea/dictionaries/
+.idea/inspectionProfiles/
+_Article/
+app/libs/
+projectFilesBackup/

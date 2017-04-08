@@ -31,6 +31,7 @@ public class RankingsListView extends ScrollView {
 	private Integer rankingsViewGroupHeightMin;
 	private int maxWidth = Integer.MAX_VALUE;
 	private Float nextScrollPos;
+	private boolean isInLayout = false;
 
 	public RankingsListView(Context context) {
 		super(context);
@@ -70,8 +71,11 @@ public class RankingsListView extends ScrollView {
 		return true;
 	}
 
+	int x = 0;
+
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		LogUtil.d(this, "onMeasure()");
 		int measuredWidth = MeasureSpec.getSize(widthMeasureSpec);
 		if(maxWidth > 0 && maxWidth < measuredWidth) {
 			int measureMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -82,9 +86,21 @@ public class RankingsListView extends ScrollView {
 
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		LogUtil.d(this, "onLayout()");
+		isInLayout = true;
 		updateChildsSharedHeight();
 		super.onLayout(changed, l, t, r, b);
 		updateScrollPosition();
+		updateChildsVisibleFrame();
+		isInLayout = false;
+	}
+
+	@Override
+	protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+		super.onScrollChanged(l, t, oldl, oldt);
+		if (!isInLayout) { // HACK: prevents updating childs when clamp in super.onLayout() by setScroll() occurred
+			updateChildsVisibleFrame();
+		}
 	}
 
 	public void setModel(List<Rank> ranks, List<User> users) {
@@ -102,6 +118,13 @@ public class RankingsListView extends ScrollView {
 		}
 
 		fillRankingsList(rankings);
+	}
+
+	private void updateChildsVisibleFrame() {
+		for (int i = 0, n = binding.lRankings.getChildCount(); i < n; ++i) {
+			final RankingView rankingView = (RankingView) binding.lRankings.getChildAt(i);
+			rankingView.onVisibleFrameChanged();
+		}
 	}
 
 	private void fillRankingsList(List<Ranking> rankings) {
@@ -139,6 +162,7 @@ public class RankingsListView extends ScrollView {
 	private void updateScrollPosition() {
 		// HACK: postpones scroll due to actual height will changed after onLayout(), so scrollPos may be out of view bounds
 		if (nextScrollPos != null) {
+			LogUtil.d(this, "updateScrollPosition(%d)", nextScrollPos.intValue());
 			setScrollY(nextScrollPos.intValue());
 			nextScrollPos = null;
 		}
@@ -179,7 +203,7 @@ public class RankingsListView extends ScrollView {
 		}
 
 		float getScaleFactor(ScaleGestureDetector detector) {
-			return 1 + (detector.getScaleFactor() - 1) * SCALE_SPEED;
+			return MathUtil.InRange(1 + (detector.getScaleFactor() - 1) * SCALE_SPEED, 0.2f, 1.8f);
 		}
 	}
 }

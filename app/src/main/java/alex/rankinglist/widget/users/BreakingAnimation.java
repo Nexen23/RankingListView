@@ -5,7 +5,7 @@ import alex.rankinglist.misc.grouping.GroupNode;
 class BreakingAnimation extends GroupingAnimation {
 	protected BreakingAnimation(UsersView usersView, GroupNode composedGroup, GroupNode a, GroupNode b) {
 		super(usersView, composedGroup, a, b);
-		usersView.makeAnimationView(composedGroup);
+		usersView.makeFrontAnimationView(composedGroup);
 		aView.setTag(this);
 		bView.setTag(this);
 	}
