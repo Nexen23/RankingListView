@@ -203,7 +203,7 @@ public class RankingsListView extends ScrollView {
 		}
 
 		float getScaleFactor(ScaleGestureDetector detector) {
-			return 1 + (detector.getScaleFactor() - 1) * SCALE_SPEED;
+			return MathUtil.InRange(1 + (detector.getScaleFactor() - 1) * SCALE_SPEED, 0.2f, 1.8f);
 		}
 	}
 }
