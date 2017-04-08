@@ -59,27 +59,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		LogUtil.d(this, "onMeasure(%s)", LogUtil.MeasureSpecToString(heightMeasureSpec));
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-	}
-
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		LogUtil.d(this, "onSizeChanged()");
-		super.onSizeChanged(w, h, oldw, oldh);
-		if (groupedList.setSpace(h)) {
-			registerGroupingEventsListenerIfNeeded();
-		}
-	}
-
-	@Override
-	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-		LogUtil.d(this, "onLayout()");
-		super.onLayout(changed, left, top, right, bottom);
-	}
-
-	@Override
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		if (isVisibleOnScreen()) {
@@ -112,6 +91,10 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		final boolean isVisible = getLocalVisibleRect(visibleRect);
 
 		if (isVisible) {
+			if (groupedList.setSpace(getHeight())) {
+				registerGroupingEventsListenerIfNeeded();
+			}
+
 			updateVisibleGroups();
 			if (isVisibleOnScreen()) {
 				updateChilds();
@@ -124,7 +107,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			groupsViews.clear();
 		}
 
-		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: \tvisible=%s, pool=%d, views=%d, animations=%d",
+		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: visible=%s, pool=%d, views=%d, animations=%d",
 				rank.scoreMin, rank.scoreMax,
 				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
 				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name,
@@ -256,6 +239,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		return firstVisibleGroup != null;
 	}
 
+	/**
+	 * Should be called after parent's onLayout()
+	 */
 	private boolean isGroupVisible(@Nullable GroupNode group, int height) {
 		final float groupPos = group.getAbsolutePos(height);
 		return (groupPos + groupViewHeight + groupViewHeight /*for boundary animations*/) >= visibleRect.top &&
