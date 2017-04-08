@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.support.annotation.CallSuper;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
@@ -26,9 +27,9 @@ abstract class GroupingAnimation {
 		this.a = a;
 		this.b = b;
 
-		jointGroupView = usersView.groupsViews.get(jointGroup);
-		aView = usersView.groupsViews.get(a);
-		bView = usersView.groupsViews.get(b);
+		jointGroupView = usersView.getGroupView(jointGroup);
+		aView = usersView.getGroupView(a);
+		bView = usersView.getGroupView(b);
 
 		animationAnimator.addListener(new CleanUpAnimatorListener());
 		animationAnimator.setDuration(usersView.animationsDuration)
@@ -51,11 +52,10 @@ abstract class GroupingAnimation {
 				.setInterpolator(new LinearInterpolator());
 
 		GroupingAnimation.Stop(aView, bView, jointGroupView);
-		usersView.bringChildToFront(jointGroupView);
 		usersView.animations.add(this);
 	}
 
-	static void Stop(View... views) {
+	static void Stop(@NonNull View... views) {
 		for (View view : views) {
 			if (view.getTag() != null) {
 				final GroupingAnimation animation = (GroupingAnimation) view.getTag();

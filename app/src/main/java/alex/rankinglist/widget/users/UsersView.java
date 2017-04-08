@@ -12,6 +12,7 @@ import android.widget.FrameLayout;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import alex.rankinglist.R;
 import alex.rankinglist.misc.grouping.GroupNode;
@@ -30,7 +31,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private boolean composingAnimationEnabled = true, breakingAnimationEnabled = true;
 	int animationsDuration;
 	@Px int viewHeight;
-	HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(), animationsViews = new HashMap<>();
+	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(),
+			animationsViewsBack = new HashMap<>(), animationsViewsFront = new HashMap<>();
 	LinkedList<GroupingAnimation> animations = new LinkedList<>();
 	GroupNode firstVisibleGroup = null, lastVisibleGroup = null;
 	final LinkedList<GroupView> viewsPool = new LinkedList<>();
@@ -51,7 +53,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	void init() {
-		animationsDuration = getResources().getInteger(R.integer.animation_fast_duration);
+		animationsDuration = 1000;//getResources().getInteger(R.integer.animation_fast_duration);
 		viewHeight = getResources().getDimensionPixelSize(R.dimen.group_view_height);
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
@@ -81,35 +83,20 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		if (isVisibleOnScreen()) {
+			for (Map.Entry<GroupNode, GroupView> entry : animationsViewsBack.entrySet()) {
+				drawChild(canvas, entry.getValue(), getDrawingTime());
+			}
+
 			GroupNode group = firstVisibleGroup;
 			while (group != lastVisibleGroup.getNext()) {
 				drawChild(canvas, getGroupView(group), getDrawingTime());
 				group = group.getNext();
 			}
-		}
-	}
 
-	public void onVisibleFrameChanged() {
-		final boolean isVisible = getLocalVisibleRect(visibleRect);
-
-		if (isVisible) {
-			updateVisibleGroupsOnFrameChanged();
-			if (isVisibleOnScreen()) {
-				updateChilds();
-				updateAnimations();
+			for (Map.Entry<GroupNode, GroupView> entry : animationsViewsFront.entrySet()) {
+				drawChild(canvas, entry.getValue(), getDrawingTime());
 			}
-			invalidate();
-		} else {
-			firstVisibleGroup = null;
-			lastVisibleGroup = null;
-			groupsViews.clear();
 		}
-
-		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: \tvisible=%s, rect=%s",
-				rank.scoreMin, rank.scoreMax,
-				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
-				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name,
-				isVisible, visibleRect.toShortString());
 	}
 
 	public void setModel(Rank rank, List<User> users) {
@@ -121,73 +108,83 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		groupedList.setData(rank, users);
 	}
 
-	@Override
-	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
-		/*final GroupView removedView = groupsViews.get(removedGroup);
+	public void onVisibleFrameChanged() {
+		final boolean isVisible = getLocalVisibleRect(visibleRect);
 
-		addGroupView(a);
-		addGroupView(b);*/
-
-		updateVisibleGroupsOnBreak(removedGroup, a, b);
-
-		/*if (composingAnimationEnabled) {
-			GroupingAnimation.Stop(removedView);
+		if (isVisible) {
+			updateVisibleGroups();
+			if (isVisibleOnScreen()) {
+				updateChilds();
+				updateAnimations();
+			}
+			invalidate();
+		} else {
+			firstVisibleGroup = null;
+			lastVisibleGroup = null;
+			groupsViews.clear();
 		}
 
-		if (breakingAnimationEnabled) {
+		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: \tvisible=%s, pool=%d, views=%d, animations=%d",
+				rank.scoreMin, rank.scoreMax,
+				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
+				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name,
+				isVisible, viewsPool.size(), groupsViews.size(), animationsViewsBack.size());
+	}
+
+	@Override
+	public void onBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
+		if (firstVisibleGroup == removedGroup) {
+			firstVisibleGroup = a;
+		}
+
+		if (lastVisibleGroup == removedGroup) {
+			lastVisibleGroup = b;
+		}
+
+		if (breakingAnimationEnabled) {// && isGroupVisible(removedGroup, getHeight())) {
 			BreakingAnimation.Start(this, removedGroup, a, b);
 		} else {
-			removeGroupView(removedGroup);
-		}*/
+			releaseGroupView(removedGroup);
+		}
 	}
 
 	@Override
 	public void onGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		//addGroupView(composedGroup);
-
-		updateVisibleGroupsOnGroup(composedGroup, a, b);
-
-		/*if (breakingAnimationEnabled) {
-			GroupingAnimation.Stop(groupsViews.get(a), groupsViews.get(b));
+		if (firstVisibleGroup == a || firstVisibleGroup == b) {
+			firstVisibleGroup = composedGroup;
 		}
 
-		if (composingAnimationEnabled) {
+		if (lastVisibleGroup == a || lastVisibleGroup == b) {
+			lastVisibleGroup = composedGroup;
+		}
+
+		if (composingAnimationEnabled) {// && isGroupVisible(composedGroup, getHeight())) {
 			ComposingAnimation.Start(this, composedGroup, a, b);
 		} else {
-			removeGroupView(a);
-			removeGroupView(b);
-		}*/
+			releaseGroupView(a);
+			releaseGroupView(b);
+		}
 	}
 
-	void makeAnimationView(GroupNode group) {
-		/*final GroupView usedView = groupsViews.remove(group);
-		animationsViews.put(group, usedView);*/
+	void makeBackAnimationView(GroupNode group) {
+		final GroupView usedView = groupsViews.remove(group);
+		animationsViewsBack.put(group, usedView);
+	}
+
+	void makeFrontAnimationView(GroupNode group) {
+		final GroupView usedView = groupsViews.remove(group);
+		animationsViewsFront.put(group, usedView);
 	}
 
 	void removeAnimationView(GroupNode group) {
-		/*final GroupView removedView = animationsViews.remove(group);
-		childsViews.remove(removedView);*/
+		GroupView removedView = animationsViewsBack.remove(group);
+		if (removedView == null) {
+			removedView = animationsViewsFront.remove(group);
+		}
+		addGroupViewToPool(removedView);
 	}
 
-	void bringChildToFront(GroupView child) {
-		/*childsViews.remove(child);
-		childsViews.add(child);*/
-	}
-
-	/*private GroupView addGroupView(GroupNode group) {
-		final GroupView view = getSpareGroupView();
-		setChildData(view, group);
-		groupsViews.put(group, view);
-		childsViews.add(view);
-		return view;
-	}
-
-	private void removeGroupView(GroupNode group) {
-		final GroupView removedView = groupsViews.remove(group);
-		childsViews.remove(removedView);
-	}*/
-
-	private void updateVisibleGroupsOnFrameChanged() {
+	private void updateVisibleGroups() {
 		final int height = getHeight();
 		if (!isVisibleOnScreen()) {
 			for (GroupNode group : groupedList) {
@@ -228,31 +225,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 				firstVisibleGroup = null;
 				lastVisibleGroup = null;
 			}
-		}
-	}
-
-	private void updateVisibleGroupsOnBreak(GroupNode removedGroup, GroupNode a, GroupNode b) {
-		releaseGroupView(removedGroup);
-
-		if (firstVisibleGroup == removedGroup) {
-			firstVisibleGroup = a;
-		}
-
-		if (lastVisibleGroup == removedGroup) {
-			lastVisibleGroup = b;
-		}
-	}
-
-	private void updateVisibleGroupsOnGroup(GroupNode composedGroup, GroupNode a, GroupNode b) {
-		releaseGroupView(a);
-		releaseGroupView(b);
-
-		if (firstVisibleGroup == a || firstVisibleGroup == b) {
-			firstVisibleGroup = composedGroup;
-		}
-
-		if (lastVisibleGroup == a || lastVisibleGroup == b) {
-			lastVisibleGroup = composedGroup;
 		}
 	}
 
@@ -299,12 +271,13 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		measureAndLayoutChild(view);
 	}
 
-	private GroupView getGroupView(GroupNode group) {
+	GroupView getGroupView(GroupNode group) {
 		GroupView view = groupsViews.get(group);
 		if (view == null) {
 			view = getSpareGroupView();
 			groupsViews.put(group, view);
 			setChildData(view, group);
+			view.setAlpha(1.0f);
 		}
 		return view;
 	}
@@ -321,7 +294,14 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	private void releaseGroupView(GroupNode group) {
 		GroupView view = groupsViews.remove(group);
+		addGroupViewToPool(view);
+	}
+
+	private void addGroupViewToPool(@Nullable GroupView view) {
 		if (view != null) {
+			if (composingAnimationEnabled || breakingAnimationEnabled) {
+				GroupingAnimation.Stop(view);
+			}
 			viewsPool.add(view);
 		}
 	}
