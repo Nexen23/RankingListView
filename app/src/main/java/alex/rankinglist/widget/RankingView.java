@@ -116,7 +116,8 @@ public class RankingView extends FrameLayout {
 		float[] radii = {leftTopCorner, leftTopCorner, 0, 0, 0, 0, leftBottomCorner, leftBottomCorner};
 
 		/*PaintDrawable drawable = new PaintDrawable(color);
-		drawable.setCornerRadii(radii);*/
+		drawable.setCornerRadii(radii);
+		binding.lRank.setBackground(drawable);*/
 		CorneredColorDrawable drawable = new CorneredColorDrawable(color, radii);
 		binding.lRank.setBackground(drawable);
 	}
