@@ -27,7 +27,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	private boolean didSkipFirstGroupingEvents = false;
 	private Rect visibleRect = new Rect();
 
-	private boolean composingAnimationEnabled = false, breakingAnimationEnabled = false;
+	private boolean composingAnimationEnabled = true, breakingAnimationEnabled = true;
 	int animationsDuration;
 	@Px int viewHeight;
 	HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(), animationsViews = new HashMap<>();
@@ -93,7 +93,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		final boolean isVisible = getLocalVisibleRect(visibleRect);
 
 		if (isVisible) {
-			updateVisibleGroups();
+			updateVisibleGroupsOnFrameChanged();
 			if (isVisibleOnScreen()) {
 				updateChilds();
 				updateAnimations();
@@ -102,6 +102,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		} else {
 			firstVisibleGroup = null;
 			lastVisibleGroup = null;
+			groupsViews.clear();
 		}
 
 		LogUtil.i(this, "TEST: rank[%d; %d] first=%s, last=%s \t:: \tvisible=%s, rect=%s",
@@ -186,7 +187,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		childsViews.remove(removedView);
 	}*/
 
-	private void updateVisibleGroups() {
+	private void updateVisibleGroupsOnFrameChanged() {
 		final int height = getHeight();
 		if (!isVisibleOnScreen()) {
 			for (GroupNode group : groupedList) {
@@ -214,10 +215,12 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 			// Shrink
 			while (firstVisibleGroup != null && !isGroupVisible(firstVisibleGroup, height)) {
+				releaseGroupView(firstVisibleGroup);
 				firstVisibleGroup = firstVisibleGroup.getNext();
 			}
 
 			while (lastVisibleGroup != null && !isGroupVisible(lastVisibleGroup, height)) {
+				releaseGroupView(lastVisibleGroup);
 				lastVisibleGroup = lastVisibleGroup.getPrev();
 			}
 
@@ -253,12 +256,6 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 		}
 	}
 
-	private boolean isGroupVisible(@Nullable GroupNode group, int height) {
-		final Float groupPos = group.getAbsolutePos(height);
-		return (groupPos + viewHeight) >= visibleRect.top &&
-				groupPos <= visibleRect.bottom;
-	}
-
 	private void updateChilds() {
 		GroupNode group = firstVisibleGroup;
 		while (group != lastVisibleGroup.getNext()) {
@@ -285,6 +282,12 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	private boolean isVisibleOnScreen() {
 		return firstVisibleGroup != null;
+	}
+
+	private boolean isGroupVisible(@Nullable GroupNode group, int height) {
+		final Float groupPos = group.getAbsolutePos(height);
+		return (groupPos + viewHeight) >= visibleRect.top &&
+				groupPos <= visibleRect.bottom;
 	}
 
 	private void setChildData(GroupView view, GroupNode group) {
