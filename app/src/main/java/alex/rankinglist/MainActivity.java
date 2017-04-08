@@ -31,6 +31,6 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private List<User> getUsers() {
-		return RandomUtil.GenerateUsersList(1000);
+		return RandomUtil.GenerateUsersList(500);
 	}
 }

@@ -30,7 +30,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 
 	private boolean composingAnimationEnabled = true, breakingAnimationEnabled = true;
 	int animationsDuration;
-	@Px int viewHeight;
+	@Px int groupViewHeight;
 	private HashMap<GroupNode, GroupView> groupsViews = new HashMap<>(),
 			animationsViewsBack = new HashMap<>(), animationsViewsFront = new HashMap<>();
 	LinkedList<GroupingAnimation> animations = new LinkedList<>();
@@ -53,8 +53,8 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	void init() {
-		animationsDuration = 1000;//getResources().getInteger(R.integer.animation_fast_duration);
-		viewHeight = getResources().getDimensionPixelSize(R.dimen.group_view_height);
+		animationsDuration = getResources().getInteger(R.integer.animation_fast_duration);
+		groupViewHeight = getResources().getDimensionPixelSize(R.dimen.group_view_height);
 		groupedList = new GroupedList(getResources().getDimensionPixelSize(R.dimen.group_view_height));
 	}
 
@@ -128,7 +128,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 				rank.scoreMin, rank.scoreMax,
 				firstVisibleGroup == null ? "null" : firstVisibleGroup.getData().name,
 				lastVisibleGroup == null ? "null" : lastVisibleGroup.getData().name,
-				isVisible, viewsPool.size(), groupsViews.size(), animationsViewsBack.size());
+				isVisible, viewsPool.size(), groupsViews.size(), animationsViewsBack.size() + animationsViewsFront.size());
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			lastVisibleGroup = b;
 		}
 
-		if (breakingAnimationEnabled) {// && isGroupVisible(removedGroup, getHeight())) {
+		if (breakingAnimationEnabled && isGroupVisible(removedGroup, getHeight())) {
 			BreakingAnimation.Start(this, removedGroup, a, b);
 		} else {
 			releaseGroupView(removedGroup);
@@ -158,7 +158,7 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 			lastVisibleGroup = composedGroup;
 		}
 
-		if (composingAnimationEnabled) {// && isGroupVisible(composedGroup, getHeight())) {
+		if (composingAnimationEnabled && isGroupVisible(composedGroup, getHeight())) {
 			ComposingAnimation.Start(this, composedGroup, a, b);
 		} else {
 			releaseGroupView(a);
@@ -257,9 +257,9 @@ public class UsersView extends FrameLayout implements GroupedList.EventsListener
 	}
 
 	private boolean isGroupVisible(@Nullable GroupNode group, int height) {
-		final Float groupPos = group.getAbsolutePos(height);
-		return (groupPos + viewHeight) >= visibleRect.top &&
-				groupPos <= visibleRect.bottom;
+		final float groupPos = group.getAbsolutePos(height);
+		return (groupPos + groupViewHeight + groupViewHeight /*for boundary animations*/) >= visibleRect.top &&
+				(groupPos - groupViewHeight /*for boundary animations*/) <= visibleRect.bottom;
 	}
 
 	private void setChildData(GroupView view, GroupNode group) {
