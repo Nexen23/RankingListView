@@ -4,4 +4,4 @@
 
 **Article**: some development issues described on [habrahabr.ru (RUS)](https://habrahabr.ru/post/321890/)
 
-<img src="https://github.com/Nexen23/RankingListView/blob/master/app/demos/demo_ORIGIN.gif" width="300">
+<img src="https://github.com/Nexen23/RankingListView/blob/master/demos/demo_ORIGIN.gif" width="300">
